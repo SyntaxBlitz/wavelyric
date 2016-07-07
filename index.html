@@ -1,0 +1,231 @@
+<body>
+	<canvas id="waveCanvas" width="800" height="150">
+	</canvas>	
+</body>
+
+<script>
+	var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+	var waveform;
+
+	var dropZone = document.body;
+	dropZone.ondragover = function (e) {
+		e.stopPropagation();
+		e.preventDefault();
+		
+		e.dataTransfer.dropEffect = 'copy';
+	};
+
+	dropZone.ondragenter = function (e) {
+		document.body.style.backgroundColor='#dfd';
+	};
+
+	dropZone.ondragleave = function (e) {
+		document.body.style.backgroundColor='white';
+	};
+
+	dropZone.ondrop = function (e) {
+		e.stopPropagation();
+		e.preventDefault();
+
+		document.body.style.backgroundColor='white';
+
+		var files = e.dataTransfer.files;
+		if (files.length > 0) {
+			var file = files[0];
+			
+			if (!(file.type.length > 6 && file.type.substring(0, 6) === 'audio/')) {
+				return;
+			}
+
+			var reader = new FileReader();
+			reader.onload = function (e) {
+				var source = audioCtx.createBufferSource();
+				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
+					waveform = new Waveform(audioBuffer, 1000);
+					source.buffer = audioBuffer;
+					source.connect(audioCtx.destination);
+					//source.start(0);
+
+					var cv = document.getElementById('waveCanvas');
+					cv.focus();
+					var totalOffset = 0;
+					var startOffset = totalOffset;
+					var zoomLevel = cv.width / waveform.length;
+					var mouseStart = 0;
+					var dragging = false;
+
+					var canvasRender = function () {
+						waveform.drawWaveform(cv, totalOffset, cv.width / zoomLevel);
+
+						window.requestAnimationFrame(canvasRender);
+					};
+					cv.onwheel = function (e) {
+						dragging = false;
+						startOffset = totalOffset;
+						
+						zoomLevel *= (-e.deltaY / 1000 + 1);
+						if (zoomLevel > waveform.maxResolution)
+							zoomLevel = waveform.maxResolution;
+						if (zoomLevel < cv.width / waveform.length)
+							zoomLevel = cv.width / waveform.length;
+						if (totalOffset < 0)
+							totalOffset = 0;
+						if (cv.width > (waveform.length - totalOffset) * zoomLevel)
+							totalOffset = waveform.length - cv.width / zoomLevel;
+					};
+					cv.onmousedown = function (e) {
+						dragging = true;
+						mouseStart = e.screenX;
+					};
+					cv.onmousemove = function (e) {
+						if (dragging) {
+							mouseNow = e.screenX;
+							totalOffset = startOffset + (mouseStart - mouseNow) / zoomLevel;
+							if (totalOffset < 0)
+								totalOffset = 0;
+							if (cv.width > (waveform.length - totalOffset) * zoomLevel)
+								totalOffset = waveform.length - cv.width / zoomLevel;
+						}
+					};
+					window.onmouseup = function (e) {
+						dragging = false;
+						startOffset = totalOffset;
+					}
+					window.requestAnimationFrame(canvasRender);
+				});
+			};
+
+			reader.readAsArrayBuffer(file);
+		}
+	};
+
+	class Waveform {
+		constructor (arrayBuffer, maxResolution) {
+			this.buffer = arrayBuffer;
+			this.maxResolution = maxResolution;
+			this.summarize(maxResolution);
+			
+			console.log('waveform constructed');
+		}
+
+		summarize (pixelsPerSecond) {
+			var startTime = +new Date();
+
+			var data = this.data;				
+			var scaleFactor = Math.floor(data[0].length / (pixelsPerSecond * this.length));
+
+			this.summaryMins = new Float32Array(Math.ceil(data[0].length / scaleFactor));
+			this.summaryMaxes = new Float32Array(Math.ceil(data[0].length / scaleFactor));
+
+			for (var i = 0; i < this.summaryMins.length; i++) {
+				var currentMin = 1;
+				var currentMax = -1;
+
+				for (var j = 0; j < scaleFactor; j++) {
+					var n = i * scaleFactor + j;
+					if (n < data[0].length) {
+						var sample = (data[0][n] + data[1][n]) / 2;
+						if (sample < currentMin)
+							currentMin = sample;
+						if (sample > currentMax)
+							currentMax = sample;
+					} else {
+						break;
+					}
+				}
+
+				this.summaryMins[i] = currentMin;
+				this.summaryMaxes[i] = currentMax;
+			}
+			console.log(+new Date() - startTime);
+		}
+
+		summarizeFurther (pixels, startTime, length) {
+			var _startTime = +new Date();
+			if (!this.summaryMins || !this.summaryMaxes)
+				return;
+
+			var newMins = new Float32Array(pixels);
+			var newMaxes = new Float32Array(pixels);
+
+			var summaryOffset = Math.floor(startTime * this.maxResolution);
+			var lengthFrames = Math.floor(length * this.maxResolution);
+
+			if (lengthFrames < pixels) {	// The old summary's length over this time region is smaller; we're expanding
+				var currentPixel = 0;
+				for (var i = 0; i < lengthFrames; i++) {
+					while (currentPixel / pixels < (i + 1) / lengthFrames) {	// we use i + 1 so it takes a whole batch from the start
+						newMins[currentPixel] = this.summaryMins[summaryOffset + i];
+						newMaxes[currentPixel] = this.summaryMaxes[summaryOffset + i];
+						currentPixel++;
+					}
+				}
+			} else {	// We're condensing old summary data down into a smaller space (this should happen more often)
+				var summaryIndex = 0;
+
+				for (var i = 0; i < pixels; i++) {
+					var currentMin = 1;
+					var currentMax = -1;
+
+					while (summaryIndex / lengthFrames < (i + 1) / pixels) {
+						if (this.summaryMins[summaryIndex + summaryOffset] < currentMin)
+							currentMin = this.summaryMins[summaryIndex + summaryOffset];
+						if (this.summaryMaxes[summaryIndex + summaryOffset] > currentMax)
+							currentMax = this.summaryMaxes[summaryIndex + summaryOffset];
+						summaryIndex++;
+					}
+
+					newMins[i] = currentMin;
+					newMaxes[i] = currentMax;
+				}
+			}
+
+			//console.log(+new Date() - _startTime);
+			return [newMins, newMaxes];
+		}
+
+		get data() {
+			return [this.buffer.getChannelData(0), this.buffer.getChannelData(1)];
+		}
+
+		get length() {
+			return this.buffer.length / this.buffer.sampleRate;
+		}
+
+		getImage(width, height, startTime, length) {
+			var canvas = document.createElement('canvas');
+			canvas.width = width;
+			canvas.height = height;
+			canvas.getContext('2d').fillStyle = 'black';
+			this.drawWaveform(canvas, startTime, length);
+			return canvas.toDataURL();
+		}
+
+		drawWaveform(canvas, startTime, length) {
+			var context = canvas.getContext('2d');
+			context.clearRect(0, 0, canvas.width, canvas.height);
+
+			if (startTime === undefined) {
+				startTime = 0;
+			}
+
+			if (length === undefined) {
+				length = this.length;
+			}
+
+			var pixels = this.summarizeFurther(canvas.width, startTime, length);
+			var _startTime = +new Date();
+			for (var i = 0; i < canvas.width; i++) {
+				context.fillRect(i, -pixels[1][i] * canvas.height / 2 + canvas.height / 2, 1, (pixels[1][i] - pixels[0][i]) * canvas.height / 2);
+			}
+		}
+	}
+
+	/*
+		test:
+		with maxResolution = 1000
+		summarizeFurther(100, 1, 0.1) -> ret
+			ret[0] === waveform.summaryMins.slice(1000, 1100)
+			ret[1] === waveform.summaryMaxes.slice(1000, 1100)
+	*/
+</script>
