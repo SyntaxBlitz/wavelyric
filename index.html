@@ -61,7 +61,6 @@
 					};
 					cv.onwheel = function (e) {
 						dragging = false;
-						startOffset = totalOffset;
 
 						zoomLevel *= (-e.deltaY / 1000 + 1);
 						if (zoomLevel > waveform.maxResolution)
@@ -76,6 +75,7 @@
 					cv.onmousedown = function (e) {
 						dragging = true;
 						mouseStart = e.screenX;
+						startOffset = totalOffset;
 					};
 					cv.onmousemove = function (e) {
 						if (dragging) {
@@ -89,8 +89,7 @@
 					};
 					window.onmouseup = function (e) {
 						dragging = false;
-						startOffset = totalOffset;
-					}
+					};
 					window.requestAnimationFrame(canvasRender);
 				});
 			};
