@@ -50,7 +50,7 @@
 					cv.focus();
 					var totalOffset = 0;
 					var startOffset = totalOffset;
-					var zoomLevel = cv.width / waveform.length;
+					var zoomLevel = cv.width / waveform.length;	// pixels per second
 					var mouseStart = 0;
 					var dragging = false;
 
@@ -62,7 +62,7 @@
 					cv.onwheel = function (e) {
 						dragging = false;
 						startOffset = totalOffset;
-						
+
 						zoomLevel *= (-e.deltaY / 1000 + 1);
 						if (zoomLevel > waveform.maxResolution)
 							zoomLevel = waveform.maxResolution;
