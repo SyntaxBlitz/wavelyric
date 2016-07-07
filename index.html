@@ -62,9 +62,10 @@
 					cv.onwheel = function (e) {
 						dragging = false;
 
-						var cursor = totalOffset + cv.width / zoomLevel / 2;
+						// var cursor = totalOffset + cv.width / zoomLevel / 2;	// centre on middle
+						var cursor = totalOffset + mouseX / zoomLevel;	// centre on mouse cursor
 
-						var zoomLevelMultiplier = (-e.deltaY / 1000 + 1);
+						var zoomLevelMultiplier = (-e.deltaY / 500 + 1);
 						var zoomLevelOriginal = zoomLevel;
 						zoomLevel *= zoomLevelMultiplier;
 
@@ -85,12 +86,14 @@
 					};
 					cv.onmousedown = function (e) {
 						dragging = true;
-						mouseStart = e.screenX;
+						mouseStart = e.clientX;
 						startOffset = totalOffset;
 					};
-					cv.onmousemove = function (e) {
+					window.onmousemove = function (e) {
+						mouseX = e.clientX - cv.getBoundingClientRect().left;
+
 						if (dragging) {
-							mouseNow = e.screenX;
+							var mouseNow = e.clientX;
 							totalOffset = startOffset + (mouseStart - mouseNow) / zoomLevel;
 							if (totalOffset < 0)
 								totalOffset = 0;
