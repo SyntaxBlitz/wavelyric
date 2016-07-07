@@ -44,7 +44,9 @@
 					waveform = new Waveform(audioBuffer, 1000);
 					source.buffer = audioBuffer;
 					source.connect(audioCtx.destination);
-					//source.start(0);
+					source.start(0);
+
+					var startTime = audioCtx.currentTime;
 
 					var cv = document.getElementById('waveCanvas');
 					cv.focus();
@@ -55,6 +57,7 @@
 					var dragging = false;
 
 					var canvasRender = function () {
+						totalOffset = audioCtx.currentTime - startTime;
 						waveform.drawWaveform(cv, totalOffset, cv.width / zoomLevel);
 
 						window.requestAnimationFrame(canvasRender);
@@ -122,9 +125,7 @@
 		}
 
 		summarize (pixelsPerSecond) {
-			var startTime = +new Date();
-
-			var data = this.data;				
+			var data = this.data;
 			var scaleFactor = Math.floor(data[0].length / (pixelsPerSecond * this.length));
 
 			this.summaryMins = new Float32Array(Math.ceil(data[0].length / scaleFactor));
@@ -150,11 +151,9 @@
 				this.summaryMins[i] = currentMin;
 				this.summaryMaxes[i] = currentMax;
 			}
-			console.log(+new Date() - startTime);
 		}
 
 		summarizeFurther (pixels, startTime, length) {
-			var _startTime = +new Date();
 			if (!this.summaryMins || !this.summaryMaxes)
 				return;
 
@@ -174,31 +173,52 @@
 					}
 				}
 			} else {	// We're condensing old summary data down into a smaller space (this should happen more often)
-				var summaryIndex = 0;
+				var framesPerVirtualPixel = lengthFrames / pixels;
+				var totalSummaryFrames = this.length * this.maxResolution;
+				var virtualPixelsPerFrame = 1 / framesPerVirtualPixel;
+				var totalVirtualPixels = totalSummaryFrames * virtualPixelsPerFrame;
+				var initialVirtualPixel = Math.floor(startTime / this.length * totalVirtualPixels);
 
-				for (var i = 0; i < pixels; i++) {
-					var currentMin = 1;
-					var currentMax = -1;
+				var i = 0;
+				for (var virtualPixel = initialVirtualPixel; virtualPixel < initialVirtualPixel + pixels; virtualPixel++) {
 
-					while (summaryIndex / lengthFrames < (i + 1) / pixels) {
-						if (this.summaryMins[summaryIndex + summaryOffset] < currentMin)
-							currentMin = this.summaryMins[summaryIndex + summaryOffset];
-						if (this.summaryMaxes[summaryIndex + summaryOffset] > currentMax)
-							currentMax = this.summaryMaxes[summaryIndex + summaryOffset];
-						summaryIndex++;
+					// at certain bitrates there is occasionally a problem with vertical lines showing up at close zooms.
+					// this is because there's not always a frame available to a virtual pixel.
+					// in these cases, we copy the previous pixel.
+					if (Math.floor(virtualPixel / totalVirtualPixels * totalSummaryFrames) !== Math.floor((virtualPixel + 1) / totalVirtualPixels * totalSummaryFrames)) {
+						var currentMin = 1;
+						var currentMax = -1;
+
+						for (var frame = Math.floor(virtualPixel / totalVirtualPixels * totalSummaryFrames); frame < Math.floor((virtualPixel + 1) / totalVirtualPixels * totalSummaryFrames); frame++) {
+							if (this.summaryMins[frame] < currentMin)
+								currentMin = this.summaryMins[frame];
+							if (this.summaryMaxes[frame] > currentMax)
+								currentMax = this.summaryMaxes[frame];
+						}
+
+						newMins[i] = currentMin;
+						newMaxes[i] = currentMax;
+					} else if (i !== 0) {
+						newMins[i] = newMins[i - 1];
+						newMaxes[i] = newMaxes[i - 1];
+					} else {
+						newMins[i] = 0;
+						newMaxes[i] = 0;
 					}
 
-					newMins[i] = currentMin;
-					newMaxes[i] = currentMax;
+					i++;
 				}
 			}
 
-			//console.log(+new Date() - _startTime);
 			return [newMins, newMaxes];
 		}
 
 		get data() {
-			return [this.buffer.getChannelData(0), this.buffer.getChannelData(1)];
+			if (this.buffer.numberOfChannels === 1) {
+				return [this.buffer.getChannelData(0), this.buffer.getChannelData(0)];
+			} else {
+				return [this.buffer.getChannelData(0), this.buffer.getChannelData(1)];
+			}
 		}
 
 		get length() {
