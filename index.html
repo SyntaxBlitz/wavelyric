@@ -62,11 +62,22 @@
 					cv.onwheel = function (e) {
 						dragging = false;
 
-						zoomLevel *= (-e.deltaY / 1000 + 1);
-						if (zoomLevel > waveform.maxResolution)
+						var cursor = totalOffset + cv.width / zoomLevel / 2;
+
+						var zoomLevelMultiplier = (-e.deltaY / 1000 + 1);
+						var zoomLevelOriginal = zoomLevel;
+						zoomLevel *= zoomLevelMultiplier;
+
+						if (zoomLevel > waveform.maxResolution) {
 							zoomLevel = waveform.maxResolution;
-						if (zoomLevel < cv.width / waveform.length)
+						}
+						if (zoomLevel < cv.width / waveform.length) {
 							zoomLevel = cv.width / waveform.length;
+						}
+
+						zoomLevelMultiplier = zoomLevel / zoomLevelOriginal;	// adjust in case the zoom level was clipped
+						totalOffset = (totalOffset - cursor) / zoomLevelMultiplier + cursor;	// move the offset so we zoom centred on the cursor
+
 						if (totalOffset < 0)
 							totalOffset = 0;
 						if (cv.width > (waveform.length - totalOffset) * zoomLevel)
