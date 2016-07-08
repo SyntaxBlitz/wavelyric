@@ -41,6 +41,16 @@
 			reader.onload = function (e) {
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
 					var editor = new MarkerEditor(document.getElementById('waveCanvas'), audioBuffer);
+
+					document.onkeydown = e => {
+						if (e.keyCode === 32) {
+							if (editor.playing) {
+								editor.stop();
+							} else {
+								editor.play();
+							}
+						}
+					};
 				});
 			};
 
@@ -53,6 +63,7 @@
 			this.waveform = new Waveform(audioBuffer, 1000);
 
 			this.canvas = canvas;
+			this.audioBuffer = audioBuffer;
 
 			this.totalOffset = 0;
 			this.startOffset = this.totalOffset;
@@ -105,24 +116,6 @@
 					this.cursor = this.totalOffset + this.mouseX / this.zoomLevel;
 				}
 			};
-
-			document.onkeydown = e => {
-				if (e.keyCode === 32) {
-					this.playing = !this.playing;
-
-					if (this.playing) {
-						this.source = audioCtx.createBufferSource();
-						this.source.buffer = audioBuffer;
-						this.source.connect(audioCtx.destination);
-						this.source.start(0, this.cursor);
-
-						this.startTime = audioCtx.currentTime;
-						this.startTimecode = this.cursor;
-					} else {
-						this.source.stop();
-					}
-				}
-			};
 			window.requestAnimationFrame(this.canvasRender.bind(this));
 		}
 
@@ -152,6 +145,30 @@
 			this.totalOffset = this.cursor - secondsOnScreen / 2;
 			this.clipOffset();
 		};
+
+		play () {
+			if (this.playing)
+				return;
+
+			this.playing = true;
+
+			this.source = audioCtx.createBufferSource();
+			this.source.buffer = this.audioBuffer;
+			this.source.connect(audioCtx.destination);
+			this.source.start(0, this.cursor);
+
+			this.startTime = audioCtx.currentTime;
+			this.startTimecode = this.cursor;
+		}
+
+		stop () {
+			if (!this.playing)
+				return;
+
+			this.playing = false;
+
+			this.source.stop();
+		}
 	}
 
 	class Waveform {
