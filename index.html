@@ -1,5 +1,5 @@
 <body>
-	<canvas id="waveCanvas" width="800" height="150">
+	<canvas id="waveCanvas" width="800" height="300">
 	</canvas>	
 </body>
 
@@ -63,15 +63,22 @@
 			this.waveform = new Waveform(audioBuffer, 1000);
 
 			this.canvas = canvas;
+			this.drawingBounds = {
+				x: 10,
+				y: 10,
+				width: canvas.width / 2,
+				height: canvas.height / 2
+			};
 			this.audioBuffer = audioBuffer;
 
 			this.totalOffset = 0;
 			this.startOffset = this.totalOffset;
-			this.zoomLevel = canvas.width / this.waveform.length;	// pixels per second
+			this.zoomLevel = this.drawingBounds.width / this.waveform.length;	// pixels per second
 			this.mouseStart = 0;
 			this.dragging = false;
 			this.cursor = 0;
 			this.playing = false;
+			this.listeners = {};
 
 			this.canvas.focus();
 
@@ -81,7 +88,7 @@
 		}
 
 		addEventListeners () {
-			this.canvas.onwheel = e => {
+			this.listeners.wheel = e => {
 				this.dragging = false;
 
 				if (e.deltaY < 0) {		// scroll up
@@ -90,13 +97,13 @@
 					this.zoom(0.9);
 				}
 			};
-			this.canvas.onmousedown = e => {
+			this.listeners.mousedown = e => {
 				this.dragging = true;
 				this.mouseStart = e.clientX;
 				this.startOffset = this.totalOffset;
 			};
-			window.onmousemove = e => {
-				this.mouseX = e.clientX - this.canvas.getBoundingClientRect().left;
+			this.listeners.mousemove = e => {
+				this.mouseXFromCanvas = e.clientX - this.canvas.getBoundingClientRect().left;
 
 				if (this.dragging) {
 					var mouseNow = e.clientX;
@@ -104,12 +111,25 @@
 					this.clipOffset();
 				}
 			};
-			window.onmouseup = e => {
+			this.listeners.mouseup = e => {
 				this.dragging = false;
 				if (e.clientX === this.mouseStart) {	// the mouse was clicked, not dragged
-					this.cursor = this.totalOffset + this.mouseX / this.zoomLevel;
+					var mouseXFromWaveform = this.mouseXFromCanvas - this.drawingBounds.x;
+					this.cursor = this.totalOffset + mouseXFromWaveform / this.zoomLevel;
 				}
 			};
+
+			this.canvas.addEventListener('wheel', this.listeners.wheel);
+			this.canvas.addEventListener('mousedown', this.listeners.mousedown);
+			window.addEventListener('mousemove', this.listeners.mousemove);
+			window.addEventListener('mouseup', this.listeners.mouseup);
+		}
+
+		removeEventListeners() {
+			this.canvas.removeEventListener('wheel', this.listeners.wheel);
+			this.canvas.removeEventListener('mousedown', this.listeners.mousedown);
+			window.removeEventListener('mousemove', this.listeners.mousemove);
+			window.removeEventListener('mouseup', this.listeners.mouseup);
 		}
 
 		zoom (multiplier) {
@@ -123,8 +143,8 @@
 			if (this.zoomLevel > this.waveform.maxResolution) {
 				this.zoomLevel = this.waveform.maxResolution;
 			}
-			if (this.zoomLevel < this.canvas.width / this.waveform.length) {
-				this.zoomLevel = this.canvas.width / this.waveform.length;
+			if (this.zoomLevel < this.drawingBounds.width / this.waveform.length) {
+				this.zoomLevel = this.drawingBounds.width / this.waveform.length;
 			}
 
 			zoomLevelMultiplier = this.zoomLevel / zoomLevelOriginal;	// adjust in case the zoom level was clipped
@@ -139,23 +159,29 @@
 				this.centreCursor();
 			}
 			this.canvas.getContext('2d').fillStyle = 'black';
-			this.waveform.drawWaveform(this.canvas, this.totalOffset, this.canvas.width / this.zoomLevel);
-			var cursorX = (this.cursor - this.totalOffset) * this.zoomLevel;
-			this.canvas.getContext('2d').fillStyle = 'green';
-			this.canvas.getContext('2d').fillRect(cursorX, 0, 1, this.canvas.height);
+			this.waveform.drawWaveform(this.canvas, this.totalOffset, this.drawingBounds.width / this.zoomLevel, this.drawingBounds.x, this.drawingBounds.y, this.drawingBounds.width, this.drawingBounds.height);
+			this.drawCursor();
 
 			window.requestAnimationFrame(this.canvasRender.bind(this));
 		};
 
+		drawCursor () {
+			var cursorX = (this.cursor - this.totalOffset) * this.zoomLevel + this.drawingBounds.x;
+			if (cursorX >= this.drawingBounds.x && cursorX <= this.drawingBounds.x + this.drawingBounds.width) {
+				this.canvas.getContext('2d').fillStyle = 'green';
+				this.canvas.getContext('2d').fillRect(cursorX, this.drawingBounds.y, 1, this.drawingBounds.height);
+			}
+		}
+
 		clipOffset () {
 			if (this.totalOffset < 0)
 				this.totalOffset = 0;
-			if (this.canvas.width > (this.waveform.length - this.totalOffset) * this.zoomLevel)
-				this.totalOffset = this.waveform.length - this.canvas.width / this.zoomLevel;
+			if (this.drawingBounds.width > (this.waveform.length - this.totalOffset) * this.zoomLevel)
+				this.totalOffset = this.waveform.length - this.drawingBounds.width / this.zoomLevel;
 		};
 
 		centreCursor () {
-			var secondsOnScreen = this.canvas.width / this.zoomLevel;
+			var secondsOnScreen = this.drawingBounds.width / this.zoomLevel;
 			this.totalOffset = this.cursor - secondsOnScreen / 2;
 			this.clipOffset();
 		};
@@ -217,6 +243,11 @@
 						break;
 					}
 				}
+
+				if (currentMin < -1)	// this happens!
+					currentMin = -1;
+				if (currentMax > 1)
+					currentMax = 1;
 
 				this.summaryMins[i] = currentMin;
 				this.summaryMaxes[i] = currentMax;
@@ -304,9 +335,18 @@
 			return canvas.toDataURL();
 		}
 
-		drawWaveform(canvas, startTime, length) {
+		drawWaveform(canvas, startTime, length, x, y, width, height) {
+			if (x === undefined)
+				x = 0;
+			if (y === undefined)
+				y = 0;
+			if (width === undefined)
+				width = canvas.width;
+			if (height === undefined)
+				height = canvas.height;
+
 			var context = canvas.getContext('2d');
-			context.clearRect(0, 0, canvas.width, canvas.height);
+			context.clearRect(x, y, width, height);
 
 			if (startTime === undefined) {
 				startTime = 0;
@@ -316,10 +356,14 @@
 				length = this.length;
 			}
 
-			var pixels = this.summarizeFurther(canvas.width, startTime, length);
-			var _startTime = +new Date();
-			for (var i = 0; i < canvas.width; i++) {
-				context.fillRect(i, -pixels[1][i] * canvas.height / 2 + canvas.height / 2, 1, (pixels[1][i] - pixels[0][i]) * canvas.height / 2);
+			var pixels = this.summarizeFurther(width, startTime, length);
+			
+			for (var i = x; i < x + width; i++) {
+				context.fillRect(i, y + -pixels[1][i] * height / 2 + height / 2, 1, (pixels[1][i] - pixels[0][i]) * height / 2);
+				if (y + -pixels[1][i] * height / 2 + height / 2 < 10) {
+					//console.log(pixels[1][i])
+					//console.log(i, y + -pixels[1][i] * height / 2 + height / 2, 1, (pixels[1][i] - pixels[0][i]) * height / 2);
+				}
 			}
 		}
 	}
