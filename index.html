@@ -40,7 +40,24 @@
 			var reader = new FileReader();
 			reader.onload = function (e) {
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
-					var editor = new MarkerEditor(document.getElementById('waveCanvas'), audioBuffer);
+					editor = new MarkerEditor(document.getElementById('waveCanvas'), audioBuffer);
+
+					editor.markers.push({
+						text: "This was a triumph",
+						position: 0.21498357095900328
+					});
+					editor.markers.push({
+						text: "I'm making a note here: huge success",
+						position: 3.971087351612989
+					});
+					editor.markers.push({
+						text: "It's hard to overstate my satisfaction",
+						position: 9.013792006435741
+					});
+					editor.markers.push({
+						text: "Aperture Science",
+						position: 16.205408251314033
+					});
 
 					document.onkeydown = e => {
 						if (e.keyCode === 32) {
@@ -63,13 +80,22 @@
 			this.waveform = new Waveform(audioBuffer, 1000);
 
 			this.canvas = canvas;
+			this.textHeight = 18;
+			this.lowerPadding = 50;
+			this.textPadding = 5;
 			this.drawingBounds = {
-				x: 10,
-				y: 10,
-				width: canvas.width / 2,
-				height: canvas.height / 2
+				x: 0,
+				y: 0,
+				width: canvas.width,
+				height: canvas.height - this.textHeight - this.lowerPadding,
 			};
 			this.audioBuffer = audioBuffer;
+			this.colours = {
+				waveformColour: 'black',
+				cursorColour: 'rgba(0, 128, 0, 1)',
+				defaultMarkerColour: 'rgba(0, 0, 255, 1)',
+				passedMarkerColour: 'rgba(0, 0, 255, .33)'
+			};
 
 			this.totalOffset = 0;
 			this.startOffset = this.totalOffset;
@@ -79,6 +105,8 @@
 			this.cursor = 0;
 			this.playing = false;
 			this.listeners = {};
+
+			this.markers = [];
 
 			this.canvas.focus();
 
@@ -160,20 +188,62 @@
 			}
 			
 			this.drawWaveform();
+			this.drawMarkers();
 			this.drawCursor();
 
 			window.requestAnimationFrame(this.canvasRender.bind(this));
 		};
 
 		drawWaveform () {
-			this.canvas.getContext('2d').fillStyle = 'black';
+			this.canvas.getContext('2d').fillStyle = this.colours.waveformColour;
 			this.waveform.drawWaveform(this.canvas, this.totalOffset, this.drawingBounds.width / this.zoomLevel, this.drawingBounds.x, this.drawingBounds.y, this.drawingBounds.width, this.drawingBounds.height);
+		}
+
+		drawMarkers() {
+			// this method does make some assumptions about the drawing bounds:
+			// 	the waveform takes up the entire horizontal span of the canvas
+			//	the waveform is at the top of the canvas
+			// 	this.drawingBounds.height + this.textHeight + this.lowerPadding == this.canvas.height
+
+			var context = this.canvas.getContext('2d');
+			context.clearRect(0, this.drawingBounds.height, this.canvas.width, this.textHeight + this.lowerPadding);
+
+			for (var i = 0; i < this.markers.length; i++) {
+				let marker = this.markers[i];
+
+				if (marker.position > this.cursor)
+					context.fillStyle = this.colours.defaultMarkerColour;
+				else
+					context.fillStyle = this.colours.passedMarkerColour;
+
+				var markerX = (marker.position - this.totalOffset) * this.zoomLevel;
+				context.fillRect(markerX, 0, 1, this.drawingBounds.height + this.textHeight);
+
+				if (i === this.markers.length - 1) {
+					context.fillText(marker.text, markerX + this.textPadding, this.drawingBounds.height + this.textHeight);
+				} else {
+					var maxTextWidth = (this.markers[i + 1].position - marker.position) * this.zoomLevel - this.textPadding * 2;
+					context.font = this.textHeight + 'px sans-serif';
+
+					let text = marker.text;
+					let chars = marker.text.length;
+					while (context.measureText(text).width > maxTextWidth) {
+						chars--;
+						if (chars <= 0) {
+							text = '';
+							break;
+						}
+						text = marker.text.substring(0, chars) + '...';
+					}
+					context.fillText(text, markerX + this.textPadding, this.drawingBounds.height + this.textHeight);
+				}
+			}
 		}
 
 		drawCursor () {
 			var cursorX = (this.cursor - this.totalOffset) * this.zoomLevel + this.drawingBounds.x;
 			if (cursorX >= this.drawingBounds.x && cursorX <= this.drawingBounds.x + this.drawingBounds.width) {
-				this.canvas.getContext('2d').fillStyle = 'green';
+				this.canvas.getContext('2d').fillStyle = this.colours.cursorColour;
 				this.canvas.getContext('2d').fillRect(cursorX, this.drawingBounds.y, 1, this.drawingBounds.height);
 			}
 		}
