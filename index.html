@@ -39,116 +39,120 @@
 
 			var reader = new FileReader();
 			reader.onload = function (e) {
-				var source;
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
-					waveform = new Waveform(audioBuffer, 1000);
-
-					var startTime;
-					var startTimecode;
-
-					var cv = document.getElementById('waveCanvas');
-					cv.focus();
-					var totalOffset = 0;
-					var startOffset = totalOffset;
-					var zoomLevel = cv.width / waveform.length;	// pixels per second
-					var mouseStart = 0;
-					var dragging = false;
-					cursor = 0;
-					var playing = false;
-
-					var canvasRender = function () {
-						if (playing) {
-							cursor = audioCtx.currentTime - startTime + startTimecode;
-							centreCursor();
-						}
-						cv.getContext('2d').fillStyle = 'black';
-						waveform.drawWaveform(cv, totalOffset, cv.width / zoomLevel);
-						cursorX = (cursor - totalOffset) * zoomLevel;
-						cv.getContext('2d').fillStyle = 'green';
-						cv.getContext('2d').fillRect(cursorX, 0, 1, cv.height);
-
-						window.requestAnimationFrame(canvasRender);
-					};
-
-					var clipOffset = function () {
-						if (totalOffset < 0)
-							totalOffset = 0;
-						if (cv.width > (waveform.length - totalOffset) * zoomLevel)
-							totalOffset = waveform.length - cv.width / zoomLevel;
-					};
-
-					var centreCursor = function () {
-						var secondsOnScreen = cv.width / zoomLevel;
-						totalOffset = cursor - secondsOnScreen / 2;
-						clipOffset();
-					};
-
-					cv.onwheel = function (e) {
-						dragging = false;
-
-						var focus = cursor;	// centre zoom on playing cursor
-
-						var zoomLevelMultiplier = (-e.deltaY / 500 + 1);
-						var zoomLevelOriginal = zoomLevel;
-						zoomLevel *= zoomLevelMultiplier;
-
-						if (zoomLevel > waveform.maxResolution) {
-							zoomLevel = waveform.maxResolution;
-						}
-						if (zoomLevel < cv.width / waveform.length) {
-							zoomLevel = cv.width / waveform.length;
-						}
-
-						zoomLevelMultiplier = zoomLevel / zoomLevelOriginal;	// adjust in case the zoom level was clipped
-						totalOffset = (totalOffset - focus) / zoomLevelMultiplier + focus;	// move the offset so we zoom centred on the cursor
-
-						clipOffset();
-					};
-					cv.onmousedown = function (e) {
-						dragging = true;
-						mouseStart = e.clientX;
-						startOffset = totalOffset;
-					};
-					window.onmousemove = function (e) {
-						mouseX = e.clientX - cv.getBoundingClientRect().left;
-
-						if (dragging) {
-							var mouseNow = e.clientX;
-							totalOffset = startOffset + (mouseStart - mouseNow) / zoomLevel;
-							clipOffset();
-						}
-					};
-					window.onmouseup = function (e) {
-						dragging = false;
-						if (e.clientX === mouseStart) {	// the mouse was clicked, not dragged
-							cursor = totalOffset + mouseX / zoomLevel;
-						}
-					};
-
-					document.onkeydown = function (e) {
-						if (e.keyCode === 32) {
-							playing = !playing;
-
-							if (playing) {
-								source = audioCtx.createBufferSource();
-								source.buffer = audioBuffer;
-								source.connect(audioCtx.destination);
-								source.start(0, cursor);
-
-								startTime = audioCtx.currentTime;
-								startTimecode = cursor;
-							} else {
-								source.stop();
-							}
-						}
-					};
-					window.requestAnimationFrame(canvasRender);
+					var editor = new MarkerEditor(document.getElementById('waveCanvas'), audioBuffer);
 				});
 			};
 
 			reader.readAsArrayBuffer(file);
 		}
 	};
+
+	class MarkerEditor {
+		constructor (canvas, audioBuffer) {
+			this.waveform = new Waveform(audioBuffer, 1000);
+
+			this.canvas = canvas;
+
+			this.totalOffset = 0;
+			this.startOffset = this.totalOffset;
+			this.zoomLevel = canvas.width / this.waveform.length;	// pixels per second
+			this.mouseStart = 0;
+			this.dragging = false;
+			this.cursor = 0;
+			this.playing = false;
+
+			this.canvas.focus();
+
+			this.canvas.onwheel = e => {
+				this.dragging = false;
+
+				var focus = this.cursor;	// centre zoom on playing cursor
+
+				var zoomLevelMultiplier = (-e.deltaY / 500 + 1);
+				var zoomLevelOriginal = this.zoomLevel;
+				this.zoomLevel *= zoomLevelMultiplier;
+
+				if (this.zoomLevel > this.waveform.maxResolution) {
+					this.zoomLevel = this.waveform.maxResolution;
+				}
+				if (this.zoomLevel < this.canvas.width / this.waveform.length) {
+					this.zoomLevel = this.canvas.width / this.waveform.length;
+				}
+
+				zoomLevelMultiplier = this.zoomLevel / zoomLevelOriginal;	// adjust in case the zoom level was clipped
+				this.totalOffset = (this.totalOffset - focus) / zoomLevelMultiplier + focus;	// move the offset so we zoom centred on the cursor
+
+				this.clipOffset();
+			};
+			this.canvas.onmousedown = e => {
+				this.dragging = true;
+				this.mouseStart = e.clientX;
+				this.startOffset = this.totalOffset;
+			};
+			window.onmousemove = e => {
+				this.mouseX = e.clientX - this.canvas.getBoundingClientRect().left;
+
+				if (this.dragging) {
+					var mouseNow = e.clientX;
+					this.totalOffset = this.startOffset + (this.mouseStart - mouseNow) / this.zoomLevel;
+					this.clipOffset();
+				}
+			};
+			window.onmouseup = e => {
+				this.dragging = false;
+				if (e.clientX === this.mouseStart) {	// the mouse was clicked, not dragged
+					this.cursor = this.totalOffset + this.mouseX / this.zoomLevel;
+				}
+			};
+
+			document.onkeydown = e => {
+				if (e.keyCode === 32) {
+					this.playing = !this.playing;
+
+					if (this.playing) {
+						this.source = audioCtx.createBufferSource();
+						this.source.buffer = audioBuffer;
+						this.source.connect(audioCtx.destination);
+						this.source.start(0, this.cursor);
+
+						this.startTime = audioCtx.currentTime;
+						this.startTimecode = this.cursor;
+					} else {
+						this.source.stop();
+					}
+				}
+			};
+			window.requestAnimationFrame(this.canvasRender.bind(this));
+		}
+
+		canvasRender () {
+			if (this.playing) {
+				this.cursor = audioCtx.currentTime - this.startTime + this.startTimecode;
+				this.centreCursor();
+			}
+			this.canvas.getContext('2d').fillStyle = 'black';
+			this.waveform.drawWaveform(this.canvas, this.totalOffset, this.canvas.width / this.zoomLevel);
+			var cursorX = (this.cursor - this.totalOffset) * this.zoomLevel;
+			this.canvas.getContext('2d').fillStyle = 'green';
+			this.canvas.getContext('2d').fillRect(cursorX, 0, 1, this.canvas.height);
+
+			window.requestAnimationFrame(this.canvasRender.bind(this));
+		};
+
+		clipOffset () {
+			if (this.totalOffset < 0)
+				this.totalOffset = 0;
+			if (this.canvas.width > (this.waveform.length - this.totalOffset) * this.zoomLevel)
+				this.totalOffset = this.waveform.length - this.canvas.width / this.zoomLevel;
+		};
+
+		centreCursor () {
+			var secondsOnScreen = this.canvas.width / this.zoomLevel;
+			this.totalOffset = this.cursor - secondsOnScreen / 2;
+			this.clipOffset();
+		};
+	}
 
 	class Waveform {
 		constructor (arrayBuffer, maxResolution) {
