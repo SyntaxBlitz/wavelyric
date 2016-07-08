@@ -78,23 +78,11 @@
 			this.canvas.onwheel = e => {
 				this.dragging = false;
 
-				var focus = this.cursor;	// centre zoom on playing cursor
-
-				var zoomLevelMultiplier = (-e.deltaY / 500 + 1);
-				var zoomLevelOriginal = this.zoomLevel;
-				this.zoomLevel *= zoomLevelMultiplier;
-
-				if (this.zoomLevel > this.waveform.maxResolution) {
-					this.zoomLevel = this.waveform.maxResolution;
+				if (e.deltaY < 0) {		// scroll up
+					this.zoom(1.1);
+				} else {
+					this.zoom(0.9);
 				}
-				if (this.zoomLevel < this.canvas.width / this.waveform.length) {
-					this.zoomLevel = this.canvas.width / this.waveform.length;
-				}
-
-				zoomLevelMultiplier = this.zoomLevel / zoomLevelOriginal;	// adjust in case the zoom level was clipped
-				this.totalOffset = (this.totalOffset - focus) / zoomLevelMultiplier + focus;	// move the offset so we zoom centred on the cursor
-
-				this.clipOffset();
 			};
 			this.canvas.onmousedown = e => {
 				this.dragging = true;
@@ -117,6 +105,27 @@
 				}
 			};
 			window.requestAnimationFrame(this.canvasRender.bind(this));
+		}
+
+		zoom (multiplier) {
+			var focus = this.cursor;	// centre zoom on playing cursor
+
+			var zoomLevelMultiplier = multiplier;
+			var zoomLevelOriginal = this.zoomLevel;
+
+			this.zoomLevel *= zoomLevelMultiplier;
+
+			if (this.zoomLevel > this.waveform.maxResolution) {
+				this.zoomLevel = this.waveform.maxResolution;
+			}
+			if (this.zoomLevel < this.canvas.width / this.waveform.length) {
+				this.zoomLevel = this.canvas.width / this.waveform.length;
+			}
+
+			zoomLevelMultiplier = this.zoomLevel / zoomLevelOriginal;	// adjust in case the zoom level was clipped
+			this.totalOffset = (this.totalOffset - focus) / zoomLevelMultiplier + focus;	// move the offset so we zoom centred on the cursor
+
+			this.clipOffset();
 		}
 
 		canvasRender () {
