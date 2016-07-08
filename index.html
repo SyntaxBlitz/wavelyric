@@ -158,12 +158,17 @@
 				this.cursor = audioCtx.currentTime - this.startTime + this.startTimecode;
 				this.centreCursor();
 			}
-			this.canvas.getContext('2d').fillStyle = 'black';
-			this.waveform.drawWaveform(this.canvas, this.totalOffset, this.drawingBounds.width / this.zoomLevel, this.drawingBounds.x, this.drawingBounds.y, this.drawingBounds.width, this.drawingBounds.height);
+			
+			this.drawWaveform();
 			this.drawCursor();
 
 			window.requestAnimationFrame(this.canvasRender.bind(this));
 		};
+
+		drawWaveform () {
+			this.canvas.getContext('2d').fillStyle = 'black';
+			this.waveform.drawWaveform(this.canvas, this.totalOffset, this.drawingBounds.width / this.zoomLevel, this.drawingBounds.x, this.drawingBounds.y, this.drawingBounds.width, this.drawingBounds.height);
+		}
 
 		drawCursor () {
 			var cursorX = (this.cursor - this.totalOffset) * this.zoomLevel + this.drawingBounds.x;
