@@ -360,10 +360,6 @@
 			
 			for (var i = x; i < x + width; i++) {
 				context.fillRect(i, y + -pixels[1][i] * height / 2 + height / 2, 1, (pixels[1][i] - pixels[0][i]) * height / 2);
-				if (y + -pixels[1][i] * height / 2 + height / 2 < 10) {
-					//console.log(pixels[1][i])
-					//console.log(i, y + -pixels[1][i] * height / 2 + height / 2, 1, (pixels[1][i] - pixels[0][i]) * height / 2);
-				}
 			}
 		}
 	}
