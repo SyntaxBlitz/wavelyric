@@ -101,7 +101,7 @@
 			this.startOffset = this.totalOffset;
 			this.zoomLevel = this.drawingBounds.width / this.waveform.length;	// pixels per second
 			this.mouseStart = 0;
-			this.dragging = false;
+			this.panning = false;
 			this.cursor = 0;
 			this.playing = false;
 			this.listeners = {};
@@ -117,7 +117,7 @@
 
 		addEventListeners () {
 			this.listeners.wheel = e => {
-				this.dragging = false;
+				this.panning = false;
 
 				if (e.deltaY < 0) {		// scroll up
 					this.zoom(1.1);
@@ -126,21 +126,21 @@
 				}
 			};
 			this.listeners.mousedown = e => {
-				this.dragging = true;
+				this.panning = true;
 				this.mouseStart = e.clientX;
 				this.startOffset = this.totalOffset;
 			};
 			this.listeners.mousemove = e => {
 				this.mouseXFromCanvas = e.clientX - this.canvas.getBoundingClientRect().left;
 
-				if (this.dragging) {
+				if (this.panning) {
 					var mouseNow = e.clientX;
 					this.totalOffset = this.startOffset + (this.mouseStart - mouseNow) / this.zoomLevel;
 					this.clipOffset();
 				}
 			};
 			this.listeners.mouseup = e => {
-				this.dragging = false;
+				this.panning = false;
 				if (e.clientX === this.mouseStart) {	// the mouse was clicked, not dragged
 					var mouseXFromWaveform = this.mouseXFromCanvas - this.drawingBounds.x;
 					this.cursor = this.totalOffset + mouseXFromWaveform / this.zoomLevel;
