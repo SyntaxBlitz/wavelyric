@@ -1,5 +1,5 @@
 <body>
-	<canvas id="waveCanvas" width="800" height="300">
+	<canvas id="waveCanvas" width="800" height="200">
 	</canvas>	
 </body>
 
@@ -83,6 +83,7 @@
 			this.textHeight = 18;
 			this.lowerPadding = 50;
 			this.textPadding = 5;
+			this.markerSlack = 5;
 			this.drawingBounds = {
 				x: 0,
 				y: 0,
@@ -94,7 +95,8 @@
 				waveformColour: 'black',
 				cursorColour: 'rgba(0, 128, 0, 1)',
 				defaultMarkerColour: 'rgba(0, 0, 255, 1)',
-				passedMarkerColour: 'rgba(0, 0, 255, .33)'
+				passedMarkerColour: 'rgba(0, 0, 255, .33)',
+				hoveringMarkerColour: 'rgba(200, 200, 0, 1)'
 			};
 
 			this.totalOffset = 0;
@@ -107,6 +109,7 @@
 			this.listeners = {};
 
 			this.markers = [];
+			this.lastHoveringMarker = null;
 
 			this.canvas.focus();
 
@@ -132,6 +135,7 @@
 			};
 			this.listeners.mousemove = e => {
 				this.mouseXFromCanvas = e.clientX - this.canvas.getBoundingClientRect().left;
+				this.mouseYFromCanvas = e.clientY - this.canvas.getBoundingClientRect().top;
 
 				if (this.panning) {
 					var mouseNow = e.clientX;
@@ -206,12 +210,27 @@
 			// 	this.drawingBounds.height + this.textHeight + this.lowerPadding == this.canvas.height
 
 			var context = this.canvas.getContext('2d');
+
+			let currentHoveringMarker = this.markerHover(this.mouseXFromCanvas, this.mouseYFromCanvas);
+			if (this.lastHoveringMarker !== null) {
+				this.lastHoveringMarker.hovering = false;
+			}
+			this.lastHoveringMarker = currentHoveringMarker;
+			if (currentHoveringMarker !== null) {
+				document.body.style.cursor = 'pointer';
+				currentHoveringMarker.hovering = true;
+			} else {
+				document.body.style.cursor = 'auto';
+			}
+
 			context.clearRect(0, this.drawingBounds.height, this.canvas.width, this.textHeight + this.lowerPadding);
 
 			for (var i = 0; i < this.markers.length; i++) {
 				let marker = this.markers[i];
 
-				if (marker.position > this.cursor)
+				if (marker.hovering)
+					context.fillStyle = this.colours.hoveringMarkerColour;
+				else if (marker.position > this.cursor)
 					context.fillStyle = this.colours.defaultMarkerColour;
 				else
 					context.fillStyle = this.colours.passedMarkerColour;
@@ -219,11 +238,11 @@
 				var markerX = (marker.position - this.totalOffset) * this.zoomLevel;
 				context.fillRect(markerX, 0, 1, this.drawingBounds.height + this.textHeight);
 
+				context.font = this.textHeight + 'px sans-serif';
 				if (i === this.markers.length - 1) {
 					context.fillText(marker.text, markerX + this.textPadding, this.drawingBounds.height + this.textHeight);
 				} else {
 					var maxTextWidth = (this.markers[i + 1].position - marker.position) * this.zoomLevel - this.textPadding * 2;
-					context.font = this.textHeight + 'px sans-serif';
 
 					let text = marker.text;
 					let chars = marker.text.length;
@@ -238,6 +257,48 @@
 					context.fillText(text, markerX + this.textPadding, this.drawingBounds.height + this.textHeight);
 				}
 			}
+		}
+
+		markerHover (mouseX, mouseY) {
+			// assert this.markers is sorted by ascending position
+			var mouseSeconds = mouseX / this.zoomLevel + this.totalOffset;
+			var closestDistance = this.waveform.length;
+			var closestDistanceIndex = this.markers.length - 1;
+
+			var chosenMarker = null;
+			for (let i = 0; i < this.markers.length; i++) {
+				let markerDistance = Math.abs(this.markers[i].position - mouseSeconds);
+				if (markerDistance < closestDistance) {
+					closestDistance = markerDistance;
+				} else {
+					closestDistanceIndex = i - 1;
+					break;
+				}
+			}
+
+			if (closestDistance * this.zoomLevel < this.markerSlack) {
+				chosenMarker = this.markers[closestDistanceIndex];
+			}
+
+			if (chosenMarker === null && mouseY > this.drawingBounds.height && mouseY <= this.drawingBounds.height + this.textHeight) {
+				let lastMarkerToLeft = this.markers[this.markers.length - 1];
+				for (let marker of this.markers) {
+					if (marker.position < mouseSeconds) {
+						lastMarkerToLeft = marker;
+					} else {
+						break;
+					}
+				}
+
+				let context = this.canvas.getContext('2d');
+				context.font = this.textHeight + 'px sans-serif';
+				let textWidth = context.measureText(lastMarkerToLeft.text).width;
+				if (mouseX < (lastMarkerToLeft.position - this.totalOffset) * this.zoomLevel + this.textPadding + textWidth) {
+					chosenMarker = lastMarkerToLeft;
+				}
+			}
+
+			return chosenMarker;
 		}
 
 		drawCursor () {
