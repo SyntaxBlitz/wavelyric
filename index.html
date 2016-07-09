@@ -40,8 +40,8 @@
 			var reader = new FileReader();
 			reader.onload = function (e) {
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
-					let waveform = new Waveform(audioBuffer, 1000);
-					editor = new MarkerEditor(document.getElementById('waveCanvas'), waveform, 1.1607237204923522, 3.971087351612989);
+					let waveform = new Waveform(audioBuffer, 4000);
+					editor = new MarkerEditor(document.getElementById('waveCanvas'), waveform, 0, waveform.length);
 
 					/*editor.markers.push({
 						text: "This was a triumph",
@@ -519,54 +519,83 @@
 			var newMins = new Float32Array(pixels);
 			var newMaxes = new Float32Array(pixels);
 
-			var summaryOffset = Math.floor(startTime * this.maxResolution);
-			var lengthFrames = Math.floor(length * this.maxResolution);
+			var lengthSummaryFrames = Math.floor(length * this.maxResolution);
+			var lengthSampleFrames = Math.floor(length * this.buffer.sampleRate);
 
-			if (lengthFrames < pixels) {	// The old summary's length over this time region is smaller; we're expanding
+			var offset, lengthFrames, resolution;
+			var useSummaryFrames;
+
+			if (lengthSampleFrames < pixels) {
+				resolution = this.buffer.sampleRate;
+				offset = Math.floor(startTime * resolution);
+				lengthFrames = Math.floor(length * resolution);
+
 				var currentPixel = 0;
 				for (var i = 0; i < lengthFrames; i++) {
-					while (currentPixel / pixels < (i + 1) / lengthFrames) {	// we use i + 1 so it takes a whole batch from the start
-						newMins[currentPixel] = this.summaryMins[summaryOffset + i];
-						newMaxes[currentPixel] = this.summaryMaxes[summaryOffset + i];
+					while (currentPixel / pixels < (i + 1) / lengthFrames) {		// we use i + 1 so it takes a whole batch from the start
+						let sample = (this.data[0][frame] + this.data[1][frame]) / 2;
+						newMins[currentPixel] = sample;
+						newMaxes[currentPixel] = sample;
 						currentPixel++;
 					}
 				}
-			} else {	// We're condensing old summary data down into a smaller space (this should happen more often)
-				var framesPerVirtualPixel = lengthFrames / pixels;
-				var totalSummaryFrames = this.length * this.maxResolution;
-				var virtualPixelsPerFrame = 1 / framesPerVirtualPixel;
-				var totalVirtualPixels = totalSummaryFrames * virtualPixelsPerFrame;
-				var initialVirtualPixel = Math.floor(startTime / this.length * totalVirtualPixels);
 
-				var i = 0;
-				for (var virtualPixel = initialVirtualPixel; virtualPixel < initialVirtualPixel + pixels; virtualPixel++) {
+				return [newMins, newMaxes];
+			} else if (lengthSummaryFrames < pixels) {
+				resolution = this.buffer.sampleRate;
+				useSummaryFrames = false;
+			} else {
+				resolution = this.maxResolution;
+				useSummaryFrames = true;
+			}
 
-					// at certain bitrates there is occasionally a problem with vertical lines showing up at close zooms.
-					// this is because there's not always a frame available to a virtual pixel.
-					// in these cases, we copy the previous pixel.
-					if (Math.floor(virtualPixel / totalVirtualPixels * totalSummaryFrames) !== Math.floor((virtualPixel + 1) / totalVirtualPixels * totalSummaryFrames)) {
-						var currentMin = 1;
-						var currentMax = -1;
+			offset = Math.floor(startTime * resolution);
+			lengthFrames = Math.floor(length * resolution);
+			
+			var framesPerVirtualPixel = lengthFrames / pixels;
+			var totalFrames = this.length * resolution;
+			var virtualPixelsPerFrame = 1 / framesPerVirtualPixel;
+			var totalVirtualPixels = totalFrames * virtualPixelsPerFrame;
+			var initialVirtualPixel = Math.floor(startTime / this.length * totalVirtualPixels);
 
-						for (var frame = Math.floor(virtualPixel / totalVirtualPixels * totalSummaryFrames); frame < Math.floor((virtualPixel + 1) / totalVirtualPixels * totalSummaryFrames); frame++) {
+			var i = 0;
+			for (var virtualPixel = initialVirtualPixel; virtualPixel < initialVirtualPixel + pixels; virtualPixel++) {
+
+				// at certain bitrates there is occasionally a problem with vertical lines showing up at close zooms.
+				// this is because there's not always a frame available to a virtual pixel.
+				// in these cases, we copy the previous pixel.
+				if (Math.floor(virtualPixel / totalVirtualPixels * totalFrames) !== Math.floor((virtualPixel + 1) / totalVirtualPixels * totalFrames)) {
+					var currentMin = 1;
+					var currentMax = -1;
+
+					if (useSummaryFrames) {
+						for (var frame = Math.floor(virtualPixel / totalVirtualPixels * totalFrames); frame < Math.floor((virtualPixel + 1) / totalVirtualPixels * totalFrames); frame++) {
 							if (this.summaryMins[frame] < currentMin)
 								currentMin = this.summaryMins[frame];
 							if (this.summaryMaxes[frame] > currentMax)
 								currentMax = this.summaryMaxes[frame];
 						}
-
-						newMins[i] = currentMin;
-						newMaxes[i] = currentMax;
-					} else if (i !== 0) {
-						newMins[i] = newMins[i - 1];
-						newMaxes[i] = newMaxes[i - 1];
 					} else {
-						newMins[i] = 0;
-						newMaxes[i] = 0;
+						for (var frame = Math.floor(virtualPixel / totalVirtualPixels * totalFrames); frame < Math.floor((virtualPixel + 1) / totalVirtualPixels * totalFrames); frame++) {
+							let sample = (this.data[0][frame] + this.data[1][frame]) / 2;
+							if (sample < currentMin)
+								currentMin = sample;
+							if (sample > currentMax)
+								currentMax = sample;
+						}
 					}
 
-					i++;
+					newMins[i] = currentMin;
+					newMaxes[i] = currentMax;
+				} else if (i !== 0) {
+					newMins[i] = newMins[i - 1];
+					newMaxes[i] = newMaxes[i - 1];
+				} else {
+					newMins[i] = 0;
+					newMaxes[i] = 0;
 				}
+
+				i++;
 			}
 
 			return [newMins, newMaxes];
