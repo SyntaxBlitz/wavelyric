@@ -1,10 +1,11 @@
 class MarkerEditor {
-		constructor (canvas, waveform, startTime, length) {
+		constructor (canvas, audioCtx, waveform, startTime, length) {
+			this.canvas = canvas;
+			this.audioCtx = audioCtx;
 			this.waveform = waveform;
 			this.startTime = startTime;
 			this.length = length;
 
-			this.canvas = canvas;
 			this.textHeight = 36;
 			this.timecodeHeight = 10;
 			this.lowerPadding = 50;
@@ -144,8 +145,8 @@ class MarkerEditor {
 			this.lastFrame = performance.now();
 
 			if (this.playing) {
-				this.cursor = audioCtx.currentTime - this.audioStartTime + this.startTimecode;
-				if (audioCtx.currentTime - this.audioStartTime >= this.length - (this.startTimecode - this.startTime)) {
+				this.cursor = this.audioCtx.currentTime - this.audioStartTime + this.startTimecode;
+				if (this.audioCtx.currentTime - this.audioStartTime >= this.length - (this.startTimecode - this.startTime)) {
 					this.stop();
 				}
 				this.centreCursor();
@@ -378,12 +379,12 @@ class MarkerEditor {
 
 			this.playing = true;
 
-			this.source = audioCtx.createBufferSource();
+			this.source = this.audioCtx.createBufferSource();
 			this.source.buffer = this.waveform.buffer;
-			this.source.connect(audioCtx.destination);
+			this.source.connect(this.audioCtx.destination);
 			this.source.start(0, this.cursor);
 
-			this.audioStartTime = audioCtx.currentTime;
+			this.audioStartTime = this.audioCtx.currentTime;
 			this.startTimecode = this.cursor;
 		}
 
