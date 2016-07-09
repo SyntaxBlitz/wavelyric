@@ -311,6 +311,9 @@
 					context.fillStyle = this.colours.passedMarkerColour;
 
 				var markerX = (marker.position - this.totalOffset) * this.zoomLevel;
+				if (Math.abs(marker.position - this.waveform.length) < 1e-6) {	// if they're equal (floats)
+					markerX -= 1;
+				}
 				context.fillRect(markerX, 0, 1, this.drawingBounds.height + this.textHeight);
 
 				context.font = this.textHeight + 'px sans-serif';
@@ -335,6 +338,9 @@
 		}
 
 		markerHover (mouseX, mouseY) {
+			if (mouseX > this.drawingBounds.width)
+				return null;
+
 			// assert this.markers is sorted by ascending position
 			var mouseSeconds = mouseX / this.zoomLevel + this.totalOffset;
 			var closestDistance = this.waveform.length;
