@@ -42,7 +42,7 @@
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
 					editor = new MarkerEditor(document.getElementById('waveCanvas'), audioBuffer);
 
-					editor.markers.push({
+					/*editor.markers.push({
 						text: "This was a triumph",
 						position: 0.21498357095900328
 					});
@@ -57,6 +57,23 @@
 					editor.markers.push({
 						text: "Aperture Science",
 						position: 16.205408251314033
+					});*/
+
+					editor.markers.push({
+						text: "This",
+						position: 0.21498357095900328
+					});
+					editor.markers.push({
+						text: "was",
+						position: 0.5177814293550009
+					});
+					editor.markers.push({
+						text: "a",
+						position: 0.7218638663474963
+					});
+					editor.markers.push({
+						text: "triumph",
+						position: 1.1607237204923522
 					});
 
 					document.onkeydown = e => {
@@ -80,7 +97,7 @@
 			this.waveform = new Waveform(audioBuffer, 1000);
 
 			this.canvas = canvas;
-			this.textHeight = 18;
+			this.textHeight = 36;
 			this.lowerPadding = 50;
 			this.textPadding = 5;
 			this.markerSlack = 5;
