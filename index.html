@@ -468,10 +468,10 @@
 		}
 
 		clipOffset () {
-			if (this.totalOffset < this.startTime)
-				this.totalOffset = this.startTime;
 			if (this.totalOffset > this.length - this.drawingBounds.width / this.zoomLevel + this.startTime)
 				this.totalOffset = this.length - this.drawingBounds.width / this.zoomLevel + this.startTime;
+			if (this.totalOffset < this.startTime)
+				this.totalOffset = this.startTime;
 		};
 
 		centreCursor () {
