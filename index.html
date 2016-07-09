@@ -84,6 +84,7 @@
 			this.lowerPadding = 50;
 			this.textPadding = 5;
 			this.markerSlack = 5;
+			this.minimumMarkerDistance = 0.05;	// seconds
 			this.drawingBounds = {
 				x: 0,
 				y: 0,
@@ -109,7 +110,10 @@
 			this.listeners = {};
 
 			this.markers = [];
-			this.lastHoveringMarker = null;
+			this.lastHoveringMarkerIndex = null;
+			this.currentlyDraggingIndex = null;
+			this.onShiftClickMarker = null;
+			this.dragDeltaSeconds = 0;
 
 			this.canvas.focus();
 
@@ -129,9 +133,21 @@
 				}
 			};
 			this.listeners.mousedown = e => {
-				this.panning = true;
+				this.mouseXFromCanvas = e.clientX - this.canvas.getBoundingClientRect().left;
+				this.mouseYFromCanvas = e.clientY - this.canvas.getBoundingClientRect().top;
 				this.mouseStart = e.clientX;
-				this.startOffset = this.totalOffset;
+
+				let hoveringMarkerIndex = this.markerHover(this.mouseXFromCanvas, this.mouseYFromCanvas);
+				if (hoveringMarkerIndex === null) {
+					this.panning = true;
+					this.startOffset = this.totalOffset;
+				} else if (e.shiftKey && this.onShiftClickMarker) {
+					this.onShiftClickMarker(hoveringMarkerIndex);
+				} else {
+					let mousePositionSeconds = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset;
+					this.dragDeltaSeconds = mousePositionSeconds - this.markers[hoveringMarkerIndex].position;
+					this.currentlyDraggingIndex = hoveringMarkerIndex;
+				}
 			};
 			this.listeners.mousemove = e => {
 				this.mouseXFromCanvas = e.clientX - this.canvas.getBoundingClientRect().left;
@@ -141,13 +157,43 @@
 					var mouseNow = e.clientX;
 					this.totalOffset = this.startOffset + (this.mouseStart - mouseNow) / this.zoomLevel;
 					this.clipOffset();
+				} else if (this.currentlyDraggingIndex !== null) {
+					let currentDrag = this.markers[this.currentlyDraggingIndex];
+
+					let lowestAllowed = this.currentlyDraggingIndex * this.minimumMarkerDistance;
+					let highestAllowed = this.waveform.length - ((this.markers.length - 1) - this.currentlyDraggingIndex) * this.minimumMarkerDistance;
+
+					currentDrag.position = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset - this.dragDeltaSeconds;
+					if (currentDrag.position < lowestAllowed)
+						currentDrag.position = lowestAllowed;
+					if (currentDrag.position > highestAllowed)
+						currentDrag.position = highestAllowed;
+
+					let lesserIterator = this.currentlyDraggingIndex - 1;
+					while (lesserIterator >= 0 && this.markers[lesserIterator].position > this.markers[lesserIterator + 1].position - this.minimumMarkerDistance) {
+						this.markers[lesserIterator].position = this.markers[lesserIterator + 1].position - this.minimumMarkerDistance;
+						lesserIterator--;
+					}
+
+					let greaterIterator = this.currentlyDraggingIndex + 1;
+					while (greaterIterator < this.markers.length && this.markers[greaterIterator].position < this.markers[greaterIterator - 1].position + this.minimumMarkerDistance) {
+						this.markers[greaterIterator].position = this.markers[greaterIterator - 1].position + this.minimumMarkerDistance;
+						greaterIterator++;
+					}
 				}
 			};
 			this.listeners.mouseup = e => {
 				this.panning = false;
-				if (e.clientX === this.mouseStart) {	// the mouse was clicked, not dragged
-					var mouseXFromWaveform = this.mouseXFromCanvas - this.drawingBounds.x;
-					this.cursor = this.totalOffset + mouseXFromWaveform / this.zoomLevel;
+				if (e.clientX === this.mouseStart && !this.playing) {	// the mouse was clicked, not dragged
+					if (this.currentlyDraggingIndex !== null) {
+						this.cursor = this.markers[this.currentlyDraggingIndex].position;	// move the cursor to the clicked marker
+					} else {
+						var mouseXFromWaveform = this.mouseXFromCanvas - this.drawingBounds.x;
+						this.cursor = this.totalOffset + mouseXFromWaveform / this.zoomLevel;
+					}
+				}
+				if (this.currentlyDraggingIndex !== null) {
+					this.currentlyDraggingIndex = null;
 				}
 			};
 
@@ -211,14 +257,14 @@
 
 			var context = this.canvas.getContext('2d');
 
-			let currentHoveringMarker = this.markerHover(this.mouseXFromCanvas, this.mouseYFromCanvas);
-			if (this.lastHoveringMarker !== null) {
-				this.lastHoveringMarker.hovering = false;
+			let currentHoveringMarkerIndex = this.markerHover(this.mouseXFromCanvas, this.mouseYFromCanvas);
+			if (this.lastHoveringMarkerIndex !== null) {
+				this.markers[this.lastHoveringMarkerIndex].hovering = false;
 			}
-			this.lastHoveringMarker = currentHoveringMarker;
-			if (currentHoveringMarker !== null) {
+			this.lastHoveringMarkerIndex = currentHoveringMarkerIndex;
+			if (currentHoveringMarkerIndex !== null) {
 				document.body.style.cursor = 'pointer';
-				currentHoveringMarker.hovering = true;
+				this.markers[currentHoveringMarkerIndex].hovering = true;
 			} else {
 				document.body.style.cursor = 'auto';
 			}
@@ -265,7 +311,7 @@
 			var closestDistance = this.waveform.length;
 			var closestDistanceIndex = this.markers.length - 1;
 
-			var chosenMarker = null;
+			var chosenMarkerIndex = null;
 			for (let i = 0; i < this.markers.length; i++) {
 				let markerDistance = Math.abs(this.markers[i].position - mouseSeconds);
 				if (markerDistance < closestDistance) {
@@ -277,14 +323,14 @@
 			}
 
 			if (closestDistance * this.zoomLevel < this.markerSlack) {
-				chosenMarker = this.markers[closestDistanceIndex];
+				chosenMarkerIndex = closestDistanceIndex;
 			}
 
-			if (chosenMarker === null && mouseY > this.drawingBounds.height && mouseY <= this.drawingBounds.height + this.textHeight) {
-				let lastMarkerToLeft = this.markers[this.markers.length - 1];
-				for (let marker of this.markers) {
-					if (marker.position < mouseSeconds) {
-						lastMarkerToLeft = marker;
+			if (chosenMarkerIndex === null && mouseY > this.drawingBounds.height && mouseY <= this.drawingBounds.height + this.textHeight) {
+				let lastMarkerToLeftIndex = this.markers.length - 1;
+				for (let i = 0; i < this.markers.length; i++) {
+					if (this.markers[i].position < mouseSeconds) {
+						lastMarkerToLeftIndex = i;
 					} else {
 						break;
 					}
@@ -292,13 +338,13 @@
 
 				let context = this.canvas.getContext('2d');
 				context.font = this.textHeight + 'px sans-serif';
-				let textWidth = context.measureText(lastMarkerToLeft.text).width;
-				if (mouseX < (lastMarkerToLeft.position - this.totalOffset) * this.zoomLevel + this.textPadding + textWidth) {
-					chosenMarker = lastMarkerToLeft;
+				let textWidth = context.measureText(this.markers[lastMarkerToLeftIndex].text).width;
+				if (mouseX < (this.markers[lastMarkerToLeftIndex].position - this.totalOffset) * this.zoomLevel + this.textPadding + textWidth) {
+					chosenMarkerIndex = lastMarkerToLeftIndex;
 				}
 			}
 
-			return chosenMarker;
+			return chosenMarkerIndex;
 		}
 
 		drawCursor () {
