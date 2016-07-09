@@ -113,6 +113,7 @@
 
 			this.canvas = canvas;
 			this.textHeight = 36;
+			this.timecodeHeight = 10;
 			this.lowerPadding = 50;
 			this.textPadding = 5;
 			this.markerSlack = 5;
@@ -260,7 +261,10 @@
 			this.moveDraggable();
 			this.doScroll();
 			
+			this.clearAll();
+
 			this.drawWaveform();
+			this.drawTimecodes();
 			this.drawMarkers();
 			this.drawCursor();
 
@@ -309,9 +313,46 @@
 			}
 		}
 
+		clearAll () {
+			this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height);
+		}
+
 		drawWaveform () {
 			this.canvas.getContext('2d').fillStyle = this.colours.waveformColour;
 			this.waveform.drawWaveform(this.canvas, this.totalOffset, this.drawingBounds.width / this.zoomLevel, this.drawingBounds.x, this.drawingBounds.y, this.drawingBounds.width, this.drawingBounds.height);
+		}
+
+		drawTimecodes () {
+			var context = this.canvas.getContext('2d');
+			context.fillStyle = 'black';
+			context.font = this.timecodeHeight + 'px sans-serif';
+
+			var startTimecode = this.formatSeconds(this.totalOffset);
+			var endTimecode = this.formatSeconds(this.totalOffset + this.drawingBounds.width / this.zoomLevel);
+			var endTimecodeWidth = context.measureText(endTimecode).width;
+
+			context.fillText(startTimecode, this.drawingBounds.x, this.drawingBounds.y + this.drawingBounds.height + this.timecodeHeight);
+			context.fillText(endTimecode, this.drawingBounds.x + this.drawingBounds.width - endTimecodeWidth, this.drawingBounds.height + this.timecodeHeight);
+		}
+
+		formatSeconds (seconds) {
+			//seconds = Math.floor(seconds * 100) / 100 ;
+			var secondsOutput = '' + (seconds % 60);
+			if (seconds % 60 < 10)
+				secondsOutput = '0' + secondsOutput;
+			if (secondsOutput.length === 2)
+				secondsOutput += '.00';
+			else if (secondsOutput.length === 4)
+				secondsOutput += '0';
+
+			if (secondsOutput.length > 5)
+				secondsOutput = secondsOutput.substring(0, 5);
+
+			var minutes = Math.floor(seconds / 60);
+
+			var output = minutes + ':' + secondsOutput;
+
+			return output;
 		}
 
 		drawMarkers() {
@@ -333,8 +374,6 @@
 			} else {
 				document.body.style.cursor = 'auto';
 			}
-
-			context.clearRect(0, this.drawingBounds.height, this.canvas.width, this.textHeight + this.lowerPadding);
 
 			for (var i = 0; i < this.markers.length; i++) {
 				let marker = this.markers[i];
@@ -633,7 +672,6 @@
 				height = canvas.height;
 
 			var context = canvas.getContext('2d');
-			context.clearRect(x, y, width, height);
 
 			if (startTime === undefined) {
 				startTime = 0;
