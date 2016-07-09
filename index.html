@@ -40,7 +40,7 @@
 			var reader = new FileReader();
 			reader.onload = function (e) {
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
-					let waveform = new Waveform(audioBuffer, 4000);
+					let waveform = new Waveform(audioBuffer, 1000);
 					editor = new MarkerEditor(document.getElementById('waveCanvas'), waveform, 0, waveform.length);
 
 					/*editor.markers.push({
