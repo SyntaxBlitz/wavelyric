@@ -461,8 +461,11 @@
 				return;
 
 			this.playing = false;
-			
 			this.source.stop();
+
+			if (this.cursor >= this.startTime + this.length - 1e-6) {
+				this.cursor = this.startTimecode;
+			}
 		}
 	}
 
