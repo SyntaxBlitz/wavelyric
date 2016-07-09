@@ -1,6 +1,6 @@
 <body>
 	<canvas id="waveCanvas" width="800" height="200">
-	</canvas>	
+	</canvas>
 </body>
 
 <script>
@@ -376,7 +376,7 @@
 		}
 
 		markerHover (mouseX, mouseY) {
-			if (mouseX > this.drawingBounds.width)
+			if (mouseX > this.drawingBounds.width || this.markers.length === 0)
 				return null;
 
 			// assert this.markers is sorted by ascending position
