@@ -161,37 +161,6 @@
 					var mouseNow = e.clientX;
 					this.totalOffset = this.startOffset + (this.mouseStart - mouseNow) / this.zoomLevel;
 					this.clipOffset();
-				} else if (this.currentlyDraggingIndex !== null) {
-					let currentDrag = this.markers[this.currentlyDraggingIndex];
-
-					let lowestAllowed = this.currentlyDraggingIndex * this.minimumMarkerDistance;
-					let highestAllowed = this.waveform.length - ((this.markers.length - 1) - this.currentlyDraggingIndex) * this.minimumMarkerDistance;
-
-					currentDrag.position = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset - this.dragDeltaSeconds;
-					if (currentDrag.position < lowestAllowed)
-						currentDrag.position = lowestAllowed;
-					if (currentDrag.position > highestAllowed)
-						currentDrag.position = highestAllowed;
-
-					let lesserIterator = this.currentlyDraggingIndex - 1;
-					while (lesserIterator >= 0 && this.markers[lesserIterator].position > this.markers[lesserIterator + 1].position - this.minimumMarkerDistance) {
-						this.markers[lesserIterator].position = this.markers[lesserIterator + 1].position - this.minimumMarkerDistance;
-						lesserIterator--;
-					}
-
-					let greaterIterator = this.currentlyDraggingIndex + 1;
-					while (greaterIterator < this.markers.length && this.markers[greaterIterator].position < this.markers[greaterIterator - 1].position + this.minimumMarkerDistance) {
-						this.markers[greaterIterator].position = this.markers[greaterIterator - 1].position + this.minimumMarkerDistance;
-						greaterIterator++;
-					}
-
-					if (currentDrag.position < this.totalOffset) {
-						this.scroll = -1;
-					} else if (currentDrag.position > this.totalOffset + (this.drawingBounds.width / this.zoomLevel)) {
-						this.scroll = 1;
-					} else {
-						this.scroll = 0;
-					}
 				}
 			};
 			this.listeners.mouseup = e => {
@@ -252,6 +221,7 @@
 				this.centreCursor();
 			}
 
+			this.moveDraggable();
 			this.doScroll();
 			
 			this.drawWaveform();
@@ -259,6 +229,41 @@
 			this.drawCursor();
 
 			window.requestAnimationFrame(this.canvasRender.bind(this));
+		}
+
+		moveDraggable() {
+			if (this.currentlyDraggingIndex !== null) {
+				let currentDrag = this.markers[this.currentlyDraggingIndex];
+
+				let lowestAllowed = this.currentlyDraggingIndex * this.minimumMarkerDistance;
+				let highestAllowed = this.waveform.length - ((this.markers.length - 1) - this.currentlyDraggingIndex) * this.minimumMarkerDistance;
+
+				currentDrag.position = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset - this.dragDeltaSeconds;
+				if (currentDrag.position < lowestAllowed)
+					currentDrag.position = lowestAllowed;
+				if (currentDrag.position > highestAllowed)
+					currentDrag.position = highestAllowed;
+
+				let lesserIterator = this.currentlyDraggingIndex - 1;
+				while (lesserIterator >= 0 && this.markers[lesserIterator].position > this.markers[lesserIterator + 1].position - this.minimumMarkerDistance) {
+					this.markers[lesserIterator].position = this.markers[lesserIterator + 1].position - this.minimumMarkerDistance;
+					lesserIterator--;
+				}
+
+				let greaterIterator = this.currentlyDraggingIndex + 1;
+				while (greaterIterator < this.markers.length && this.markers[greaterIterator].position < this.markers[greaterIterator - 1].position + this.minimumMarkerDistance) {
+					this.markers[greaterIterator].position = this.markers[greaterIterator - 1].position + this.minimumMarkerDistance;
+					greaterIterator++;
+				}
+
+				if (currentDrag.position < this.totalOffset) {
+					this.scroll = -1;
+				} else if (currentDrag.position > this.totalOffset + (this.drawingBounds.width / this.zoomLevel)) {
+					this.scroll = 1;
+				} else {
+					this.scroll = 0;
+				}
+			}
 		}
 
 		doScroll () {
