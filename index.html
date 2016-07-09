@@ -41,7 +41,7 @@
 			reader.onload = function (e) {
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
 					let waveform = new Waveform(audioBuffer, 1000);
-					editor = new MarkerEditor(document.getElementById('waveCanvas'), waveform, 0.75, 3.971087351612989);
+					editor = new MarkerEditor(document.getElementById('waveCanvas'), waveform, 1.1607237204923522, 3.971087351612989);
 
 					/*editor.markers.push({
 						text: "This was a triumph",
@@ -116,6 +116,7 @@
 			this.lowerPadding = 50;
 			this.textPadding = 5;
 			this.markerSlack = 5;
+			this.firstMarkerLocked = true;	// only to be set if the starting marker is at the same point as startTime. otherwise minimumDistance adjusts get wonky
 			this.minimumMarkerDistance = 0.05;	// seconds
 			this.drawingBounds = {
 				x: 0,
@@ -128,7 +129,8 @@
 				cursorColour: 'rgba(0, 128, 0, 1)',
 				defaultMarkerColour: 'rgba(0, 0, 255, 1)',
 				passedMarkerColour: 'rgba(0, 0, 255, .33)',
-				hoveringMarkerColour: 'rgba(200, 200, 0, 1)'
+				hoveringMarkerColour: 'rgba(200, 200, 0, 1)',
+				lockedMarkerColour: 'rgba(128, 128, 128, .75)'
 			};
 
 			this.totalOffset = this.startTime;
@@ -266,7 +268,7 @@
 		}
 
 		moveDraggable() {
-			if (this.currentlyDraggingIndex !== null) {
+			if (this.currentlyDraggingIndex !== null && !(this.currentlyDraggingIndex === 0 && this.firstMarkerLocked)) {
 				let currentDrag = this.markers[this.currentlyDraggingIndex];
 
 				let lowestAllowed = this.currentlyDraggingIndex * this.minimumMarkerDistance + this.startTime;
@@ -337,7 +339,9 @@
 			for (var i = 0; i < this.markers.length; i++) {
 				let marker = this.markers[i];
 
-				if (marker.hovering)
+				if (i === 0 && this.firstMarkerLocked)
+					context.fillStyle = this.colours.lockedMarkerColour;
+				else if (marker.hovering)
 					context.fillStyle = this.colours.hoveringMarkerColour;
 				else if (marker.position > this.cursor)
 					context.fillStyle = this.colours.defaultMarkerColour;
@@ -457,7 +461,7 @@
 				return;
 
 			this.playing = false;
-
+			
 			this.source.stop();
 		}
 	}
