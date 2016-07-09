@@ -1,4 +1,4 @@
-var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+var audioCtx = new window.AudioContext();
 var waveform;
 
 var dropZone = document.body;
