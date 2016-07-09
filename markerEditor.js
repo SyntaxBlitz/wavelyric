@@ -120,7 +120,7 @@ class MarkerEditor {
 	}
 
 	zoom (multiplier) {
-		var focus = this.cursor;	// centre zoom on playing cursor
+		var focus = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset;
 
 		var zoomLevelMultiplier = multiplier;
 		var zoomLevelOriginal = this.zoomLevel;
