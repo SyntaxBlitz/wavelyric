@@ -40,7 +40,8 @@
 			var reader = new FileReader();
 			reader.onload = function (e) {
 				audioCtx.decodeAudioData(e.target.result).then(function (audioBuffer) {
-					editor = new MarkerEditor(document.getElementById('waveCanvas'), audioBuffer);
+					let waveform = new Waveform(audioBuffer, 1000);
+					editor = new MarkerEditor(document.getElementById('waveCanvas'), waveform, 0.75, 3.971087351612989);
 
 					/*editor.markers.push({
 						text: "This was a triumph",
@@ -59,7 +60,7 @@
 						position: 16.205408251314033
 					});*/
 
-					editor.markers.push({
+					/*editor.markers.push({
 						text: "This",
 						position: 0.21498357095900328
 					});
@@ -70,10 +71,22 @@
 					editor.markers.push({
 						text: "a",
 						position: 0.7218638663474963
-					});
+					});*/
+
+					//	the editor assumes no markers are outside of its range
 					editor.markers.push({
 						text: "triumph",
 						position: 1.1607237204923522
+					});
+
+					editor.markers.push({
+						text: "triumph2",
+						position: 1.5607237204923522
+					});
+
+					editor.markers.push({
+						text: "triumph3",
+						position: 2.1607237204923522
 					});
 
 					document.onkeydown = e => {
@@ -93,8 +106,10 @@
 	};
 
 	class MarkerEditor {
-		constructor (canvas, audioBuffer) {
-			this.waveform = new Waveform(audioBuffer, 1000);
+		constructor (canvas, waveform, startTime, length) {
+			this.waveform = waveform;
+			this.startTime = startTime;
+			this.length = length;
 
 			this.canvas = canvas;
 			this.textHeight = 36;
@@ -108,7 +123,6 @@
 				width: canvas.width,
 				height: canvas.height - this.textHeight - this.lowerPadding,
 			};
-			this.audioBuffer = audioBuffer;
 			this.colours = {
 				waveformColour: 'black',
 				cursorColour: 'rgba(0, 128, 0, 1)',
@@ -117,9 +131,9 @@
 				hoveringMarkerColour: 'rgba(200, 200, 0, 1)'
 			};
 
-			this.totalOffset = 0;
+			this.totalOffset = this.startTime;
 			this.startOffset = this.totalOffset;
-			this.zoomLevel = this.drawingBounds.width / this.waveform.length;	// pixels per second
+			this.zoomLevel = this.drawingBounds.width / this.length;	// pixels per second
 			this.mouseStart = 0;
 			this.panning = false;
 			this.cursor = 0;
@@ -219,8 +233,8 @@
 			if (this.zoomLevel > this.waveform.maxResolution) {
 				this.zoomLevel = this.waveform.maxResolution;
 			}
-			if (this.zoomLevel < this.drawingBounds.width / this.waveform.length) {
-				this.zoomLevel = this.drawingBounds.width / this.waveform.length;
+			if (this.zoomLevel < this.drawingBounds.width / this.length) {
+				this.zoomLevel = this.drawingBounds.width / this.length;
 			}
 
 			zoomLevelMultiplier = this.zoomLevel / zoomLevelOriginal;	// adjust in case the zoom level was clipped
@@ -234,7 +248,10 @@
 			this.lastFrame = performance.now();
 
 			if (this.playing) {
-				this.cursor = audioCtx.currentTime - this.startTime + this.startTimecode;
+				this.cursor = audioCtx.currentTime - this.audioStartTime + this.startTimecode;
+				if (audioCtx.currentTime - this.audioStartTime >= this.length - (this.startTimecode - this.startTime)) {
+					this.stop();
+				}
 				this.centreCursor();
 			}
 
@@ -252,8 +269,8 @@
 			if (this.currentlyDraggingIndex !== null) {
 				let currentDrag = this.markers[this.currentlyDraggingIndex];
 
-				let lowestAllowed = this.currentlyDraggingIndex * this.minimumMarkerDistance;
-				let highestAllowed = this.waveform.length - ((this.markers.length - 1) - this.currentlyDraggingIndex) * this.minimumMarkerDistance;
+				let lowestAllowed = this.currentlyDraggingIndex * this.minimumMarkerDistance + this.startTime;
+				let highestAllowed = this.length - ((this.markers.length - 1) - this.currentlyDraggingIndex) * this.minimumMarkerDistance + this.startTime;
 
 				currentDrag.position = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset - this.dragDeltaSeconds;
 				if (currentDrag.position < lowestAllowed)
@@ -328,7 +345,7 @@
 					context.fillStyle = this.colours.passedMarkerColour;
 
 				var markerX = (marker.position - this.totalOffset) * this.zoomLevel;
-				if (Math.abs(marker.position - this.waveform.length) < 1e-6) {	// if they're equal (floats)
+				if (Math.abs(marker.position - this.length - this.startTime) < 1e-6) {	// if they're equal (floats)
 					markerX -= 1;
 				}
 				context.fillRect(markerX, 0, 1, this.drawingBounds.height + this.textHeight);
@@ -360,7 +377,7 @@
 
 			// assert this.markers is sorted by ascending position
 			var mouseSeconds = mouseX / this.zoomLevel + this.totalOffset;
-			var closestDistance = this.waveform.length;
+			var closestDistance = this.length;
 			var closestDistanceIndex = this.markers.length - 1;
 
 			var chosenMarkerIndex = null;
@@ -408,10 +425,10 @@
 		}
 
 		clipOffset () {
-			if (this.totalOffset < 0)
-				this.totalOffset = 0;
-			if (this.drawingBounds.width > (this.waveform.length - this.totalOffset) * this.zoomLevel)
-				this.totalOffset = this.waveform.length - this.drawingBounds.width / this.zoomLevel;
+			if (this.totalOffset < this.startTime)
+				this.totalOffset = this.startTime;
+			if (this.totalOffset > this.length - this.drawingBounds.width / this.zoomLevel + this.startTime)
+				this.totalOffset = this.length - this.drawingBounds.width / this.zoomLevel + this.startTime;
 		};
 
 		centreCursor () {
@@ -427,11 +444,11 @@
 			this.playing = true;
 
 			this.source = audioCtx.createBufferSource();
-			this.source.buffer = this.audioBuffer;
+			this.source.buffer = this.waveform.buffer;
 			this.source.connect(audioCtx.destination);
 			this.source.start(0, this.cursor);
 
-			this.startTime = audioCtx.currentTime;
+			this.audioStartTime = audioCtx.currentTime;
 			this.startTimecode = this.cursor;
 		}
 
