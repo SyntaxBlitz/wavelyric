@@ -108,12 +108,16 @@
 			this.cursor = 0;
 			this.playing = false;
 			this.listeners = {};
+			this.scroll = 0;
 
 			this.markers = [];
 			this.lastHoveringMarkerIndex = null;
 			this.currentlyDraggingIndex = null;
 			this.onShiftClickMarker = null;
 			this.dragDeltaSeconds = 0;
+
+			this.lastFrame = 0;
+			this.scrollRate = 1;
 
 			this.canvas.focus();
 
@@ -180,6 +184,14 @@
 						this.markers[greaterIterator].position = this.markers[greaterIterator - 1].position + this.minimumMarkerDistance;
 						greaterIterator++;
 					}
+
+					if (currentDrag.position < this.totalOffset) {
+						this.scroll = -1;
+					} else if (currentDrag.position > this.totalOffset + (this.drawingBounds.width / this.zoomLevel)) {
+						this.scroll = 1;
+					} else {
+						this.scroll = 0;
+					}
 				}
 			};
 			this.listeners.mouseup = e => {
@@ -232,17 +244,29 @@
 		}
 
 		canvasRender () {
+			this.currentDelta = performance.now() - this.lastFrame;
+			this.lastFrame = performance.now();
+
 			if (this.playing) {
 				this.cursor = audioCtx.currentTime - this.startTime + this.startTimecode;
 				this.centreCursor();
 			}
+
+			this.doScroll();
 			
 			this.drawWaveform();
 			this.drawMarkers();
 			this.drawCursor();
 
 			window.requestAnimationFrame(this.canvasRender.bind(this));
-		};
+		}
+
+		doScroll () {
+			if (this.scroll !== 0) {
+				this.totalOffset += this.scroll * this.scrollRate * this.currentDelta / this.zoomLevel;
+				this.clipOffset();
+			}
+		}
 
 		drawWaveform () {
 			this.canvas.getContext('2d').fillStyle = this.colours.waveformColour;
