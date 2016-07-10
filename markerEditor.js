@@ -101,6 +101,7 @@ class MarkerEditor {
 			}
 		};
 		this.listeners.mouseup = e => {
+			this.scroll = 0;
 			this.panning = false;
 			if (e.clientX === this.mouseStart && !this.playing) {	// the mouse was clicked, not dragged
 				if (this.currentlyDraggingIndex !== null) {
@@ -214,6 +215,8 @@ class MarkerEditor {
 			} else {
 				this.scroll = 0;
 			}
+		} else {
+			this.scroll = 0;
 		}
 	}
 
