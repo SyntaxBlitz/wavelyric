@@ -32,7 +32,13 @@
 					Loading audio file...
 				</div>
 
-				<div id="main" ng-show="stage === 'loaded'">
+				<div id="lyrics" ng-show="stage === 'lyrics'">
+					Enter the song's lyrics:<br>
+					<textarea ng-model="lyricsField"></textarea><br>
+					<button ng-click="stage = 'main'" ng-disabled="lyricsField === ''">Finished</button>
+				</div>
+
+				<div id="main" ng-show="stage === 'main'">
 					<div id="tabs">
 						<div class="tab" ng-class="tab === 'metadata' ? 'highlight': ''" ng-click="tab = 'metadata'">Metadata</div>
 						<div class="tab" ng-class="tab === 'lineTiming' ? 'highlight': ''" ng-click="tab = 'lineTiming'">Line timing</div>
@@ -118,6 +124,35 @@
 
 					<div class="tabScreen" ng-show="tab === 'lineTiming'">
 						<canvas width="900" height="250" id="lineTimingCanvas"></canvas>
+						<div id="lines">
+							<table>
+								<tr>
+									<td class="lineLabel">
+										PREVIOUS LINE:
+									</td>
+									<td>
+										<div ng-model="previousLine"></div>
+									</td>
+								</tr>
+								<tr>
+									<td class="lineLabel">
+										CURRENT LINE:
+									</td>
+									<td>
+										<div ng-model="currentLine" ng-hide="editingCurrentLine"></div>
+										<input ng-model="currentLineInput" ng-show="editingCurrentLine">
+									</td>
+								</tr>
+								<tr>
+									<td class="lineLabel">
+										NEXT LINE:
+									</td>
+									<td>
+										<div ng-model="nextLine"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
 					</div>
 				</div>
 			</div>

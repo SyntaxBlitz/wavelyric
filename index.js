@@ -69,7 +69,7 @@ var registerEventListeners = function (dropZone, $scope) {
 			reader.onload = function (readerEvent) {
 				audioCtx.decodeAudioData(readerEvent.target.result).then(function (audioBuffer) {
 					$scope.waveform = new Waveform(audioBuffer, 1000);
-					$scope.stage = 'loaded';
+					$scope.stage = 'lyrics';
 					$scope.$apply();
 				});
 			};
