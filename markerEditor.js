@@ -447,6 +447,7 @@ class MarkerEditor {
 	}
 
 	destroy () {
+		this.stop();
 		this.destroyed = true;
 	}
 }
