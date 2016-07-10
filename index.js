@@ -2,6 +2,7 @@ var audioCtx = new window.AudioContext();
 var wavelyricApp = angular.module('wavelyricApp', []);
 
 wavelyricApp.controller('WavelyricCtrl', function ($scope) {
+	window.$scope = $scope;
 	$scope.stage = 'start';
 	$scope.dropZone = document.getElementById('dropZone');
 	$scope.tab = 'metadata';
@@ -85,6 +86,10 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			}
 			$scope.markers[placeMarker].position = position;
 		} else {
+			if ($scope.markers.length - $scope.spaces === $scope.lines.length) {
+				return;
+			}
+
 			var position = $scope.activeEditor.cursor;
 			if ($scope.markers.length !== 0) {
 				if (position - $scope.markers[$scope.markers.length - 1].position < $scope.activeEditor.minimumMarkerDistance) {
