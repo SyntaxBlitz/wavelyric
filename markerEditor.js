@@ -10,7 +10,7 @@ class MarkerEditor {
 		this.textHeight = 36;
 		this.timecodeHeight = 10;
 		this.lowerPadding = 50;
-		this.firstMarkerLocked = true;	// only to be set if the starting marker is at the same point as startTime. otherwise minimumDistance adjusts get wonky
+		this.firstMarkerLocked = false;	// only to be set if the starting marker is at the same point as startTime. otherwise minimumDistance adjusts get wonky
 		this.colours = {
 			waveformColour: 'black',
 			cursorColour: 'rgba(0, 128, 0, 1)',
@@ -20,6 +20,7 @@ class MarkerEditor {
 			lockedMarkerColour: 'rgba(128, 128, 128, .75)'
 		};
 		this.onShiftClickMarker = null;
+		this.onChangeCurrentMarker = null;
 
 		// also configurable, but yagni in this project, probably
 		this.textPadding = 5;
@@ -50,6 +51,7 @@ class MarkerEditor {
 		this.dragDeltaSeconds = 0;
 
 		this.lastFrame = 0;
+		this.lastCurrentMarker = null;
 		this.destroyed = false;
 
 		this.canvas.focus();
@@ -62,7 +64,7 @@ class MarkerEditor {
 		this.listeners.wheel = e => {
 			e.preventDefault();
 			e.stopPropagation();
-			
+
 			this.panning = false;
 
 			if (e.deltaY < 0) {		// scroll up
@@ -151,6 +153,8 @@ class MarkerEditor {
 		this.currentDelta = performance.now() - this.lastFrame;
 		this.lastFrame = performance.now();
 
+		console.log(this.markers.length)
+
 		if (this.playing) {
 			this.cursor = this.audioCtx.currentTime - this.audioStartTime + this.startTimecode;
 			if (this.audioCtx.currentTime - this.audioStartTime >= this.length - (this.startTimecode - this.startTime)) {
@@ -168,6 +172,11 @@ class MarkerEditor {
 		this.drawTimecodes();
 		this.drawMarkers();
 		this.drawCursor();
+
+		var markerNow = this.currentMarker();
+		if (markerNow !== this.lastCurrentMarker && this.onChangeCurrentMarker)
+			this.onChangeCurrentMarker(markerNow, this.lastCurrentMarker)
+		this.lastCurrentMarker = markerNow;
 
 		if (!this.destroyed)
 			window.requestAnimationFrame(this.canvasRender.bind(this));
@@ -358,6 +367,20 @@ class MarkerEditor {
 		}
 
 		return chosenMarkerIndex;
+	}
+
+	currentMarker () {
+		// returns the index of the last marker to the left of the cursor
+		if (this.markers.length === 0)
+			return null;
+
+		var i = 0;
+		while (i < this.markers.length && this.markers[i].position <= this.cursor + 1e-6)
+			i++;
+		if (i === 0)
+			return null;
+		else
+			return i - 1;
 	}
 
 	drawCursor () {

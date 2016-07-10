@@ -72,6 +72,11 @@ header img {
 	font-size: 10pt;
 }
 
+#lines div {
+	height: 40px;
+	font-size: 18pt;
+}
+
 footer {
 	font-size: 10pt;
 }

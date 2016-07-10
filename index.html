@@ -35,7 +35,7 @@
 				<div id="lyrics" ng-show="stage === 'lyrics'">
 					Enter the song's lyrics:<br>
 					<textarea ng-model="lyricsField"></textarea><br>
-					<button ng-click="stage = 'main'" ng-disabled="lyricsField === ''">Finished</button>
+					<button ng-click="loadLyrics()" ng-disabled="lyricsField === ''">Finished</button>
 				</div>
 
 				<div id="main" ng-show="stage === 'main'">
@@ -139,7 +139,7 @@
 										CURRENT LINE:
 									</td>
 									<td>
-										<div ng-model="currentLine" ng-hide="editingCurrentLine"></div>
+										<div ng-model="currentLine" ng-hide="editingCurrentLine">{{showCurrentLine()}}</div>
 										<input ng-model="currentLineInput" ng-show="editingCurrentLine">
 									</td>
 								</tr>
