@@ -60,6 +60,9 @@ class MarkerEditor {
 
 	addEventListeners () {
 		this.listeners.wheel = e => {
+			e.preventDefault();
+			e.stopPropagation();
+			
 			this.panning = false;
 
 			if (e.deltaY < 0) {		// scroll up
