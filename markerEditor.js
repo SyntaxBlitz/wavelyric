@@ -209,9 +209,9 @@ class MarkerEditor {
 				greaterIterator++;
 			}
 
-			if (currentDrag.position < this.totalOffset) {
+			if (this.mouseXFromCanvas < 0) {
 				this.scroll = -1;
-			} else if (currentDrag.position > this.totalOffset + (this.drawingBounds.width / this.zoomLevel)) {
+			} else if (this.mouseXFromCanvas > this.drawingBounds.width) {
 				this.scroll = 1;
 			} else {
 				this.scroll = 0;
