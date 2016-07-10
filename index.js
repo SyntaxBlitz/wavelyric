@@ -49,6 +49,8 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				e.preventDefault();
 			} else if (e.keyCode === 78) {	// n
 				$scope.setNextMarker();
+			} else if (e.keyCode === 83) {	// s
+				$scope.addSpace();
 			}
 		}
 	};
@@ -106,6 +108,53 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		}
 
 		$scope.$apply();
+	};
+
+	$scope.addSpace = function () {
+		if ($scope.currentMarker !== null) {
+			if ($scope.markers[$scope.currentMarker].space)
+				return;
+		}
+
+		var afterCursor = -1;
+		for (var i = 0; i < $scope.markers.length; i++) {
+			if ($scope.markers[i].position > $scope.activeEditor.cursor) {
+				afterCursor = i;
+				break;
+			}
+		}
+
+		var position = $scope.activeEditor.cursor;
+		if ($scope.currentMarker !== null && position - $scope.markers[$scope.currentMarker].position < $scope.activeEditor.minimumMarkerDistance) {
+			position = $scope.markers[$scope.currentMarker].position + $scope.activeEditor.minimumMarkerDistance;
+		}
+
+		if (afterCursor !== -1) {
+			if ($scope.markers[afterCursor].position - $scope.activeEditor.cursor < $scope.activeEditor.minimumMarkerDistance)
+				return;
+
+			if ($scope.markers[afterCursor].space) {
+				$scope.markers.splice(afterCursor, 1);
+				$scope.spaces--;
+			}
+
+			if ($scope.markers.length > afterCursor && afterCursor > 0 && $scope.markers[afterCursor].position - $scope.markers[afterCursor - 1].position < $scope.activeEditor.minimumMarkerDistance * 2)
+				return;
+
+			$scope.markers.splice(afterCursor, 0, {
+				text: '<space>',
+				position: position,
+				space: true
+			});
+			$scope.spaces++;
+		} else {
+			$scope.markers.push({
+				text: '<space>',
+				position: position,
+				space: true
+			});
+			$scope.spaces++;
+		}
 	};
 
 	$scope.showCurrentLine = function () {
