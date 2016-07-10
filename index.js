@@ -6,12 +6,25 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	$scope.dropZone = document.getElementById('dropZone');
 	$scope.tab = 'metadata';
 
+	$scope.waveform = null;
+	$scope.activeEditor = null;
+
 	$scope.metadata = {
 		language: 'EN',
 		difficulty: '1'
 	};
 
 	registerEventListeners($scope.dropZone, $scope);
+
+	$scope.$watch('tab', function (newTab, oldTab) {
+		if (newTab === 'lineTiming') {
+			$scope.activeEditor = new MarkerEditor(document.getElementById('lineTimingCanvas'), audioCtx, $scope.waveform, 0, $scope.waveform.length);
+		} else if (oldTab === 'lineTiming') {
+			$scope.activeEditor.destroy();
+			delete $scope.activeEditor;
+			$scope.activeEditor = null;
+		}
+	});
 });
 
 var registerEventListeners = function (dropZone, $scope) {

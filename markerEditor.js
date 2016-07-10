@@ -50,6 +50,7 @@ class MarkerEditor {
 		this.dragDeltaSeconds = 0;
 
 		this.lastFrame = 0;
+		this.destroyed = false;
 
 		this.canvas.focus();
 		this.addEventListeners();
@@ -165,7 +166,8 @@ class MarkerEditor {
 		this.drawMarkers();
 		this.drawCursor();
 
-		window.requestAnimationFrame(this.canvasRender.bind(this));
+		if (!this.destroyed)
+			window.requestAnimationFrame(this.canvasRender.bind(this));
 	}
 
 	moveDraggable() {
@@ -401,5 +403,9 @@ class MarkerEditor {
 		if (this.cursor >= this.startTime + this.length - 1e-6) {
 			this.cursor = this.startTimecode;
 		}
+	}
+
+	destroy () {
+		this.destroyed = true;
 	}
 }
