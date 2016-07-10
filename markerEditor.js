@@ -6,19 +6,11 @@ class MarkerEditor {
 		this.startTime = startTime;
 		this.length = length;
 
+		// publicly configurable post-construction
 		this.textHeight = 36;
 		this.timecodeHeight = 10;
 		this.lowerPadding = 50;
-		this.textPadding = 5;
-		this.markerSlack = 5;
 		this.firstMarkerLocked = true;	// only to be set if the starting marker is at the same point as startTime. otherwise minimumDistance adjusts get wonky
-		this.minimumMarkerDistance = 0.05;	// seconds
-		this.drawingBounds = {
-			x: 0,
-			y: 0,
-			width: canvas.width,
-			height: canvas.height - this.textHeight - this.lowerPadding,
-		};
 		this.colours = {
 			waveformColour: 'black',
 			cursorColour: 'rgba(0, 128, 0, 1)',
@@ -27,7 +19,21 @@ class MarkerEditor {
 			hoveringMarkerColour: 'rgba(200, 200, 0, 1)',
 			lockedMarkerColour: 'rgba(128, 128, 128, .75)'
 		};
+		this.onShiftClickMarker = null;
 
+		// also configurable, but yagni in this project, probably
+		this.textPadding = 5;
+		this.markerSlack = 5;
+		this.minimumMarkerDistance = 0.05;	// seconds
+		this.drawingBounds = {
+			x: 0,
+			y: 0,
+			width: canvas.width,
+			height: canvas.height - this.textHeight - this.lowerPadding,
+		};
+		this.scrollRate = 1;
+
+		// probably shouldn't touch these per-instance
 		this.totalOffset = this.startTime;
 		this.startOffset = this.totalOffset;
 		this.zoomLevel = this.drawingBounds.width / this.length;	// pixels per second
@@ -41,14 +47,11 @@ class MarkerEditor {
 		this.markers = [];
 		this.lastHoveringMarkerIndex = null;
 		this.currentlyDraggingIndex = null;
-		this.onShiftClickMarker = null;
 		this.dragDeltaSeconds = 0;
 
 		this.lastFrame = 0;
-		this.scrollRate = 1;
 
 		this.canvas.focus();
-
 		this.addEventListeners();
 
 		window.requestAnimationFrame(this.canvasRender.bind(this));
