@@ -288,7 +288,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		$scope.wordTimings[lyricIndex] = [];
 		let wordCount = $scope.markers[marker].text.split(' ').length;		
 		for (let i = 0; i < wordCount; i++) {
-			$scope.wordTimings[lyricIndex][i] = markerLength / wordCount;
+			$scope.wordTimings[lyricIndex][i] = $scope.markers[marker].position + i * markerLength / wordCount;
 		}
 	};
 
