@@ -82,6 +82,15 @@ header img {
 	color: #555;
 }
 
+.wordTimingLine {
+	padding: 10px;
+	cursor: pointer;
+}
+
+.wordTimingLine:hover {
+	background-color: #eee;
+}
+
 footer {
 	font-size: 10pt;
 }

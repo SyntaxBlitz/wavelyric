@@ -154,6 +154,12 @@
 							</table>
 						</div>
 					</div>
+
+					<div class="tabScreen" ng-show="tab === 'wordTiming'">
+						<div ng-repeat="wordTiming in wordTimings">
+							<div class="wordTimingLine">{{lines[$index]}}</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
