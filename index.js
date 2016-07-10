@@ -26,6 +26,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		if (newTab === 'lineTiming') {
 			$scope.activeEditor = new MarkerEditor(document.getElementById('lineTimingCanvas'), audioCtx, $scope.waveform, 0, $scope.waveform.length);
 			$scope.activeEditor.onChangeCurrentMarker = $scope.onChangeCurrentMarker;
+			$scope.activeEditor.onShiftClickMarker = $scope.onShiftClickMarker;
 			$scope.activeEditor.markers = $scope.markers;
 			$scope.activeEditor.textHeight = 18;
 			$scope.registerLineTimingListeners();
@@ -195,6 +196,8 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		var lineArray = $scope.lyricsField.split('\n');
 		$scope.lines = lineArray.filter(function (line) {
 			return line !== ''
+		}).map(function (line) {
+			return line.trim();
 		});
 		$scope.stage = 'main';
 	};
@@ -203,6 +206,32 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		$scope.currentMarker = newMarker;
 		$scope.$apply();
 	};
+
+	$scope.onShiftClickMarker = function (marker) {
+		if ($scope.markers[marker].space) {
+			console.log(1)
+			$scope.markers.splice(marker, 1);
+			$scope.spaces--;
+		} else if (marker > 0 && $scope.markers[marker - 1].space) {
+			console.log(2)
+			return;
+		} else {
+			console.log(3)
+			let lyricIndex = 0;
+			for (let i = 0; i < marker; i++) {
+				if (!$scope.markers[i].space)
+					lyricIndex++;
+			}
+
+			if (lyricIndex !== 0) {
+				$scope.lines[lyricIndex - 1] += ' ' + $scope.lines[lyricIndex];
+				$scope.markers[marker - 1].text = $scope.lines[lyricIndex - 1];
+
+				$scope.lines.splice(lyricIndex, 1);
+				$scope.markers.splice(marker, 1);
+			}
+		}
+	}
 });
 
 var registerEventListeners = function (dropZone, $scope) {

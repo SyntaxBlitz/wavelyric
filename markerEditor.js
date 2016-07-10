@@ -49,6 +49,7 @@ class MarkerEditor {
 		this.lastHoveringMarkerIndex = null;
 		this.currentlyDraggingIndex = null;
 		this.dragDeltaSeconds = 0;
+		this.cancelShiftMouseUp = false;
 
 		this.lastFrame = 0;
 		this.lastCurrentMarker = null;
@@ -84,6 +85,7 @@ class MarkerEditor {
 				this.startOffset = this.totalOffset;
 			} else if (e.shiftKey && this.onShiftClickMarker) {
 				this.onShiftClickMarker(hoveringMarkerIndex);
+				this.cancelShiftMouseUp = true;
 			} else {
 				let mousePositionSeconds = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset;
 				this.dragDeltaSeconds = mousePositionSeconds - this.markers[hoveringMarkerIndex].position;
@@ -103,7 +105,7 @@ class MarkerEditor {
 		this.listeners.mouseup = e => {
 			this.scroll = 0;
 			this.panning = false;
-			if (e.clientX === this.mouseStart && !this.playing) {	// the mouse was clicked, not dragged
+			if (e.clientX === this.mouseStart && !this.playing && !this.cancelShiftMouseUp) {	// the mouse was clicked, not dragged
 				if (this.currentlyDraggingIndex !== null) {
 					this.cursor = this.markers[this.currentlyDraggingIndex].position;	// move the cursor to the clicked marker
 				} else {
@@ -114,6 +116,7 @@ class MarkerEditor {
 			if (this.currentlyDraggingIndex !== null) {
 				this.currentlyDraggingIndex = null;
 			}
+			this.cancelShiftMouseUp = false;
 		};
 
 		this.canvas.addEventListener('wheel', this.listeners.wheel);
@@ -275,7 +278,7 @@ class MarkerEditor {
 		var context = this.canvas.getContext('2d');
 
 		let currentHoveringMarkerIndex = this.markerHover(this.mouseXFromCanvas, this.mouseYFromCanvas);
-		if (this.lastHoveringMarkerIndex !== null) {
+		if (this.lastHoveringMarkerIndex !== null && this.lastHoveringMarkerIndex < this.markers.length) {
 			this.markers[this.lastHoveringMarkerIndex].hovering = false;
 		}
 		this.lastHoveringMarkerIndex = currentHoveringMarkerIndex;
