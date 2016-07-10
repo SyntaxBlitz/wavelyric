@@ -21,6 +21,7 @@ class MarkerEditor {
 		};
 		this.onShiftClickMarker = null;
 		this.onChangeCurrentMarker = null;
+		this.onMoveMarker = null;
 
 		// also configurable, but yagni in this project, probably
 		this.textPadding = 5;
@@ -197,15 +198,25 @@ class MarkerEditor {
 			if (currentDrag.position > highestAllowed)
 				currentDrag.position = highestAllowed;
 
+			if (this.onMoveMarker) {
+				this.onMoveMarker(this.currentlyDraggingIndex);
+			}
+
 			let lesserIterator = this.currentlyDraggingIndex - 1;
 			while (lesserIterator >= 0 && this.markers[lesserIterator].position > this.markers[lesserIterator + 1].position - this.minimumMarkerDistance) {
 				this.markers[lesserIterator].position = this.markers[lesserIterator + 1].position - this.minimumMarkerDistance;
+				if (this.onMoveMarker) {
+					this.onMoveMarker(lesserIterator);
+				}
 				lesserIterator--;
 			}
 
 			let greaterIterator = this.currentlyDraggingIndex + 1;
 			while (greaterIterator < this.markers.length && this.markers[greaterIterator].position < this.markers[greaterIterator - 1].position + this.minimumMarkerDistance) {
 				this.markers[greaterIterator].position = this.markers[greaterIterator - 1].position + this.minimumMarkerDistance;
+				if (this.onMoveMarker) {
+					this.onMoveMarker(greaterIterator);
+				}
 				greaterIterator++;
 			}
 
