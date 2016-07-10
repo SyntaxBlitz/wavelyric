@@ -269,6 +269,8 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 		if (marker === $scope.markers.length - 1) {
 			if ($scope.markers.length - $scope.spaces !== $scope.lines.length) {
+				let lyricIndex = marker - $scope.spaces;
+				$scope.wordTimings.splice(lyricIndex, 1);
 				return;
 			} else {
 				markerLength = $scope.activeEditor.length + $scope.activeEditor.startTime - $scope.markers[marker].position;
