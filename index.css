@@ -1,0 +1,65 @@
+body {
+	font-family: sans-serif;
+}
+
+#container {
+	width: 960px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 0;
+	margin-bottom: 0;
+
+	border-left: 1px solid #eee;
+	border-right: 1px solid #eee;
+}
+
+header img {
+	width: 256px;
+	height: 64px;
+}
+
+#mainPanel, footer {
+	padding: 30px;
+}
+
+#dropZone {
+	width: 300px;
+	height: 150px;
+
+	margin-left: auto;
+	margin-right: auto;
+
+	border: 5px dashed #888;
+	border-radius: 40px;
+}
+
+#dropZone.draggingFile {
+	background-color: #ff9;
+}
+
+.tab {
+	display: inline-block;
+	padding: 10px;
+	cursor: pointer;
+}
+
+.tab.highlight {
+	background-color: #ff9;
+}
+
+.tab:hover, .tab.highlight:hover {
+	background-color: #ddd;
+}
+
+.tabScreen {
+	margin-top: 40px;
+}
+
+footer {
+	font-size: 10pt;
+}
+
+footer .small-mark {
+	width: 16px;
+	height: 16px;
+}

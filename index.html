@@ -1,15 +1,126 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" ng-app="wavelyricApp">
 	<head>
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
 		<script src="waveform.js"></script>
 		<script src="markerEditor.js"></script>
 		<script src="index.js"></script>
+
+		<link rel="stylesheet" type="text/css" href="index.css">
 	</head>
 
-	<body>
-		<canvas id="waveCanvas" width="1280" height="320">
-		</canvas>
+	<body ng-controller="WavelyricCtrl">
+		<div id="container">
+			<header>
+				<img src="assets/logo.png">
+			</header>
+			
+			<div id="mainPanel">
+				<div id="welcome" ng-show="stage === 'start'">
+					<p>Hey there! This is wavelyric.</p>
+
+					<p>Here, you can set up precise lyric timings for songs. Then, you can export the data into a format appropriate for <a href="http://store.steampowered.com/app/449000/">Steno Hero</a>.</p>
+
+					<p>Drag and drop a music file from your computer into the box below to get started. Make sure your browser is up-to-date!</p>
+
+					<div id="dropZone" ng-class="draggingFile ? 'draggingFile' : ''">
+					</div>
+				</div>
+
+				<div id="loading" ng-show="stage === 'loading'">
+					Loading audio file...
+				</div>
+
+				<div id="main" ng-show="stage === 'loaded'">
+					<div id="tabs">
+						<div class="tab" ng-class="tab === 'metadata' ? 'highlight': ''" ng-click="tab = 'metadata'">Metadata</div>
+						<div class="tab" ng-class="tab === 'lineTiming' ? 'highlight': ''" ng-click="tab = 'lineTiming'">Line timing</div>
+						<div class="tab" ng-class="tab === 'wordTiming' ? 'highlight': ''" ng-click="tab = 'wordTiming'">Word timing</div>
+						<div class="tab" ng-class="tab === 'importExport' ? 'highlight': ''" ng-click="tab = 'importExport'">Import/Export</div>
+					</div>
+					<div class="tabScreen" ng-show="tab === 'metadata'">
+						<table>
+							<tbody>
+								<tr>
+									<td>
+										Title:
+									</td>
+									<td>
+										<input ng-model='metadata.title'>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Artist:
+									</td>
+									<td>
+										<input ng-model='metadata.artist'>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Album:
+									</td>
+									<td>
+										<input ng-model='metadata.album'>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Released (year):
+									</td>
+									<td>
+										<input ng-model='metadata.year'>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Language:
+									</td>
+									<td>
+										<input ng-model='metadata.language'>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Album art path:
+									</td>
+									<td>
+										<input ng-model='metadata.art'>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Music file path:
+									</td>
+									<td>
+										<input ng-model='metadata.file'>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										Difficulty:
+									</td>
+									<td>
+										<select ng-model="metadata.difficulty">
+											<option value="1">Very easy</option>
+											<option value="2">Easy</option>
+											<option value="3">Normal</option>
+											<option value="4">Hard</option>
+											<option value="5">Very hard</option>
+										</select>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<footer>
+				By <a href="http://timothyaveni.com/">Timothy Aveni</a> <a href="https://github.com/syntaxblitz/wavelyric"><img src="assets/GitHub-Mark-32px.png" class="small-mark"></a>
+			</footer>
+		</div>
 	</body>
 </html>
