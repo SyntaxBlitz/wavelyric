@@ -8,7 +8,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	$scope.tab = 'metadata';
 
 	$scope.waveform = null;
-	$scope.activeEditor = null;
+	$scope.lineEditor = null;
 
 	$scope.metadata = {
 		language: 'EN',
@@ -26,28 +26,28 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.$watch('tab', function (newTab, oldTab) {
 		if (newTab === 'lineTiming') {
-			$scope.activeEditor = new MarkerEditor(document.getElementById('lineTimingCanvas'), audioCtx, $scope.waveform, 0, $scope.waveform.length);
-			$scope.activeEditor.onChangeCurrentMarker = $scope.onChangeCurrentMarker;
-			$scope.activeEditor.onShiftClickMarker = $scope.onShiftClickMarker;
-			$scope.activeEditor.onMoveMarker = $scope.onMoveMarker;
-			$scope.activeEditor.markers = $scope.markers;
-			$scope.activeEditor.textHeight = 18;
+			$scope.lineEditor = new MarkerEditor(document.getElementById('lineTimingCanvas'), audioCtx, $scope.waveform, 0, $scope.waveform.length);
+			$scope.lineEditor.onChangeCurrentMarker = $scope.onChangeCurrentMarker;
+			$scope.lineEditor.onShiftClickMarker = $scope.onShiftClickMarker;
+			$scope.lineEditor.onMoveMarker = $scope.onMoveMarker;
+			$scope.lineEditor.markers = $scope.markers;
+			$scope.lineEditor.textHeight = 18;
 			$scope.registerLineTimingListeners();
 		} else if (oldTab === 'lineTiming') {
-			$scope.activeEditor.destroy();
-			delete $scope.activeEditor;
+			$scope.lineEditor.destroy();
+			delete $scope.lineEditor;
 			$scope.unRegisterLineTimingListeners();
-			$scope.activeEditor = null;
+			$scope.lineEditor = null;
 		}
 	});
 
 	$scope.lineTimingListeners = {
 		keydown: function (e) {
 			if (e.keyCode === 32) {	// space
-				if ($scope.activeEditor.playing)
-					$scope.activeEditor.stop();
+				if ($scope.lineEditor.playing)
+					$scope.lineEditor.stop();
 				else
-					$scope.activeEditor.play();
+					$scope.lineEditor.play();
 
 				e.stopPropagation();
 				e.preventDefault();
@@ -70,23 +70,23 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	$scope.setNextMarker = function () {
 		var placeMarker = -1;
 		for (var i = 0; i < $scope.markers.length; i++) {
-			if ($scope.markers[i].position > $scope.activeEditor.cursor) {
+			if ($scope.markers[i].position > $scope.lineEditor.cursor) {
 				placeMarker = i;
 				break;
 			}
 		}
 
 		if (placeMarker !== -1) {
-			if ($scope.activeEditor.cursor >
-				$scope.activeEditor.startTime + $scope.activeEditor.length
-				- $scope.activeEditor.minimumMarkerDistance * ($scope.markers.length - placeMarker)) {
+			if ($scope.lineEditor.cursor >
+				$scope.lineEditor.startTime + $scope.lineEditor.length
+				- $scope.lineEditor.minimumMarkerDistance * ($scope.markers.length - placeMarker)) {
 				return;
 			}
 
-			var position = $scope.activeEditor.cursor;
+			var position = $scope.lineEditor.cursor;
 			if (placeMarker !== 0) {
-				if (position - $scope.markers[placeMarker - 1].position < $scope.activeEditor.minimumMarkerDistance) {
-					position = $scope.markers[placeMarker - 1].position + $scope.activeEditor.minimumMarkerDistance;
+				if (position - $scope.markers[placeMarker - 1].position < $scope.lineEditor.minimumMarkerDistance) {
+					position = $scope.markers[placeMarker - 1].position + $scope.lineEditor.minimumMarkerDistance;
 					// no need to do the greaterIterator stuff, because that position should never be able to happen in the first place
 				}
 			}
@@ -97,12 +97,12 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				return;
 			}
 
-			var position = $scope.activeEditor.cursor;
+			var position = $scope.lineEditor.cursor;
 			if ($scope.markers.length !== 0) {
-				if (position - $scope.markers[$scope.markers.length - 1].position < $scope.activeEditor.minimumMarkerDistance) {
-					position = $scope.markers[$scope.markers.length - 1].position + $scope.activeEditor.minimumMarkerDistance;
+				if (position - $scope.markers[$scope.markers.length - 1].position < $scope.lineEditor.minimumMarkerDistance) {
+					position = $scope.markers[$scope.markers.length - 1].position + $scope.lineEditor.minimumMarkerDistance;
 				}
-				if (position > $scope.activeEditor.startTime + $scope.activeEditor.length) {
+				if (position > $scope.lineEditor.startTime + $scope.lineEditor.length) {
 					return;
 				}
 			}
@@ -129,19 +129,19 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 		var afterCursor = -1;
 		for (var i = 0; i < $scope.markers.length; i++) {
-			if ($scope.markers[i].position > $scope.activeEditor.cursor) {
+			if ($scope.markers[i].position > $scope.lineEditor.cursor) {
 				afterCursor = i;
 				break;
 			}
 		}
 
-		var position = $scope.activeEditor.cursor;
-		if ($scope.currentMarker !== null && position - $scope.markers[$scope.currentMarker].position < $scope.activeEditor.minimumMarkerDistance) {
-			position = $scope.markers[$scope.currentMarker].position + $scope.activeEditor.minimumMarkerDistance;
+		var position = $scope.lineEditor.cursor;
+		if ($scope.currentMarker !== null && position - $scope.markers[$scope.currentMarker].position < $scope.lineEditor.minimumMarkerDistance) {
+			position = $scope.markers[$scope.currentMarker].position + $scope.lineEditor.minimumMarkerDistance;
 		}
 
 		if (afterCursor !== -1) {
-			if ($scope.markers[afterCursor].position - $scope.activeEditor.cursor < $scope.activeEditor.minimumMarkerDistance)
+			if ($scope.markers[afterCursor].position - $scope.lineEditor.cursor < $scope.lineEditor.minimumMarkerDistance)
 				return;
 
 			if ($scope.markers[afterCursor].space) {
@@ -149,7 +149,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				$scope.spaces--;
 			}
 
-			if ($scope.markers.length > afterCursor && afterCursor > 0 && $scope.markers[afterCursor].position - $scope.markers[afterCursor - 1].position < $scope.activeEditor.minimumMarkerDistance * 2)
+			if ($scope.markers.length > afterCursor && afterCursor > 0 && $scope.markers[afterCursor].position - $scope.markers[afterCursor - 1].position < $scope.lineEditor.minimumMarkerDistance * 2)
 				return;
 
 			$scope.markers.splice(afterCursor, 0, {
@@ -273,7 +273,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				$scope.wordTimings.splice(lyricIndex, 1);
 				return;
 			} else {
-				markerLength = $scope.activeEditor.length + $scope.activeEditor.startTime - $scope.markers[marker].position;
+				markerLength = $scope.lineEditor.length + $scope.lineEditor.startTime - $scope.markers[marker].position;
 			}
 		} else {
 			markerLength = $scope.markers[marker + 1].position - $scope.markers[marker].position;
