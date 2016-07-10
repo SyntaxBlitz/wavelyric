@@ -154,8 +154,6 @@ class MarkerEditor {
 		this.currentDelta = performance.now() - this.lastFrame;
 		this.lastFrame = performance.now();
 
-		console.log(this.markers.length)
-
 		if (this.playing) {
 			this.cursor = this.audioCtx.currentTime - this.audioStartTime + this.startTimecode;
 			if (this.audioCtx.currentTime - this.audioStartTime >= this.length - (this.startTimecode - this.startTime)) {

@@ -70,11 +70,17 @@ header img {
 
 .lineLabel {
 	font-size: 10pt;
+	color: #777;
 }
 
 #lines div {
 	height: 40px;
 	font-size: 18pt;
+}
+
+#lines #previousLine, #lines #nextLine {
+	font-size: 12pt;
+	color: #555;
 }
 
 footer {

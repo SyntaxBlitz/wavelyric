@@ -131,7 +131,7 @@
 										PREVIOUS LINE:
 									</td>
 									<td>
-										<div ng-model="previousLine"></div>
+										<div ng-model="previousLine" id="previousLine">{{showPreviousLine()}}</div>
 									</td>
 								</tr>
 								<tr>
@@ -139,7 +139,7 @@
 										CURRENT LINE:
 									</td>
 									<td>
-										<div ng-model="currentLine" ng-hide="editingCurrentLine">{{showCurrentLine()}}</div>
+										<div ng-model="currentLine" ng-hide="editingCurrentLine" id="currentLine">{{showCurrentLine()}}</div>
 										<input ng-model="currentLineInput" ng-show="editingCurrentLine">
 									</td>
 								</tr>
@@ -148,7 +148,7 @@
 										NEXT LINE:
 									</td>
 									<td>
-										<div ng-model="nextLine"></div>
+										<div ng-model="nextLine" id="nextLine">{{showNextLine()}}</div>
 									</td>
 								</tr>
 							</table>

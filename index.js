@@ -17,6 +17,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	$scope.lines = [];
 	$scope.markers = [];
 	$scope.currentMarker = null;
+	$scope.spaces = 0;
 
 	registerEventListeners($scope.dropZone, $scope);
 
@@ -25,6 +26,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			$scope.activeEditor = new MarkerEditor(document.getElementById('lineTimingCanvas'), audioCtx, $scope.waveform, 0, $scope.waveform.length);
 			$scope.activeEditor.onChangeCurrentMarker = $scope.onChangeCurrentMarker;
 			$scope.activeEditor.markers = $scope.markers;
+			$scope.activeEditor.textHeight = 18;
 			$scope.registerLineTimingListeners();
 		} else if (oldTab === 'lineTiming') {
 			$scope.activeEditor.destroy();
@@ -60,11 +62,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.setNextMarker = function () {
 		var placeMarker = -1;
-		var spaces = 0;
 		for (var i = 0; i < $scope.markers.length; i++) {
-			if ($scope.markers[i].space) {
-				spaces++;
-			}
 			if ($scope.markers[i].position > $scope.activeEditor.cursor) {
 				placeMarker = i;
 				break;
@@ -97,7 +95,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				}
 			}
 			$scope.markers.push({
-				text: $scope.lines[$scope.markers.length - spaces],
+				text: $scope.lines[$scope.markers.length - $scope.spaces],
 				position: position
 			});
 		}
@@ -110,6 +108,32 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			return '';
 		} else {
 			return $scope.markers[$scope.currentMarker].text;
+		}
+	};
+
+	$scope.showPreviousLine = function () {
+		if ($scope.currentMarker === null || $scope.currentMarker === 0) {
+			return '';
+		} else {
+			return $scope.markers[$scope.currentMarker - 1].text;
+		}
+	};
+
+	$scope.showNextLine = function () {
+		if ($scope.currentMarker === null)
+			if ($scope.lines.length > 0)
+				return $scope.lines[0];
+			else
+				return '';
+
+		if ($scope.currentMarker === $scope.markers.length - 1) {
+			if ($scope.markers.length - $scope.spaces === $scope.lines.length) {
+				return '';
+			} else {
+				return $scope.lines[$scope.markers.length - $scope.spaces];
+			}
+		} else {
+			return $scope.markers[$scope.currentMarker + 1].text;
 		}
 	}
 
