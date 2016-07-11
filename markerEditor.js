@@ -346,7 +346,7 @@ class MarkerEditor {
 	}
 
 	markerHover (mouseX, mouseY) {
-		if (mouseX > this.drawingBounds.width || this.markers.length === 0)
+		if (mouseX > this.drawingBounds.x + this.drawingBounds.width || mouseX < this.drawingBounds.x || this.markers.length === 0)
 			return null;
 
 		// assert this.markers is sorted by ascending position
