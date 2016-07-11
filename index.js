@@ -10,6 +10,9 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	$scope.waveform = null;
 	$scope.lineEditor = null;
 
+	$scope.activeWordEditor = null;
+	$scope.editingLine = null;
+
 	$scope.metadata = {
 		language: 'EN',
 		difficulty: '1'
@@ -39,6 +42,10 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			$scope.unRegisterLineTimingListeners();
 			$scope.lineEditor = null;
 		}
+
+		if (oldTab === 'wordTiming') {
+			$scope.destroyActiveWordEditor();
+		}
 	});
 
 	$scope.lineTimingListeners = {
@@ -59,12 +66,34 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		}
 	};
 
+	$scope.wordTimingListeners = {
+		keydown: function (e) {
+			if (e.keyCode === 32) {	// space
+				if ($scope.activeWordEditor.playing)
+					$scope.activeWordEditor.stop();
+				else
+					$scope.activeWordEditor.play();
+
+				e.stopPropagation();
+				e.preventDefault();
+			}
+		}
+	};
+
 	$scope.registerLineTimingListeners = function () {
 		document.addEventListener('keydown', $scope.lineTimingListeners.keydown);
 	};
 
 	$scope.unRegisterLineTimingListeners = function () {
 		document.removeEventListener('keydown', $scope.lineTimingListeners.keydown);
+	};
+	
+	$scope.registerWordTimingListeners = function () {
+		document.addEventListener('keydown', $scope.wordTimingListeners.keydown);
+	};
+
+	$scope.unRegisterWordTimingListeners = function () {
+		document.removeEventListener('keydown', $scope.wordTimingListeners.keydown);
 	};
 
 	$scope.setNextMarker = function () {
@@ -302,6 +331,141 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 		$scope.wordTimings[lyricIndex] = $scope.wordTimings[lyricIndex].concat($scope.wordTimings[lyricIndex + 1]);
 		$scope.wordTimings.splice(lyricIndex + 1, 1);
+	};
+
+	$scope.destroyActiveWordEditor = function () {
+		if ($scope.activeWordEditor !== null) {
+			$scope.activeWordEditor.destroy();
+			delete $scope.activeWordEditor;
+			$scope.unRegisterWordTimingListeners();
+			$scope.activeWordEditor = null;
+			$scope.editingLine = null;
+		}
+	};
+
+	$scope.clickLine = function (index) {
+		if ($scope.editingLine === index) {
+			$scope.destroyActiveWordEditor();
+		} else {
+			$scope.editLine(index);
+		}
+	};
+
+	$scope.editLine = function (lyricIndex) {
+		$scope.destroyActiveWordEditor();
+		$scope.editingLine = lyricIndex;
+
+		let currentLyric = 0;
+		let markerIndex = 0;
+		while (currentLyric < lyricIndex) {
+			markerIndex++;
+			if (!$scope.markers[markerIndex].space) 
+				currentLyric++;
+		}
+
+		let canvas = document.getElementById('wordEditor-' + lyricIndex);
+		let startTime = $scope.markers[markerIndex].position;
+		let length;
+		if (markerIndex < $scope.markers.length - 1) {
+			length = $scope.markers[markerIndex + 1].position - startTime;
+		} else {
+			length = $scope.waveform.length - startTime;
+		}
+
+		if (length * $scope.waveform.maxResolution < 900) {
+			canvas.width = length * $scope.waveform.maxResolution;
+		}
+
+		$scope.activeWordEditor = new MarkerEditor(canvas, audioCtx, $scope.waveform, startTime, length);
+		$scope.registerWordTimingListeners();
+		$scope.activeWordEditor.textHeight = 36;
+		$scope.activeWordEditor.lowerPadding = 20;
+		$scope.activeWordEditor.firstMarkerLocked = true;
+		$scope.activeWordEditor.onMoveMarker = $scope.wordMove;
+
+		let words = $scope.lines[$scope.editingLine].split(' ');
+		for (let i = 0; i < words.length; i++) {
+			$scope.activeWordEditor.markers.push({
+				text: words[i],
+				position: $scope.wordTimings[$scope.editingLine][i]
+			})
+		}
+	};
+
+	$scope.wordMove = function () {
+		for (let i = 0; i < $scope.activeWordEditor.markers.length; i++) {
+			$scope.wordTimings[$scope.editingLine][i] = $scope.activeWordEditor.markers[i].position;
+		}
+	};
+
+	$scope.toJSON = function () {
+		return JSON.stringify({
+			"version": 1,
+			"metadata": $scope.metadata,
+			"lines": $scope.lines,
+			"markers": $scope.markers,
+			"wordTimings": $scope.wordTimings
+		});
+	};
+
+	$scope.fromJSON = function (jsonString) {
+		let jsonObject = JSON.parse(jsonString);
+
+		$scope.metadata = jsonObject.metadata;
+		$scope.lines = jsonObject.lines;
+		$scope.markers = jsonObject.markers;
+		$scope.wordTimings = jsonObject.wordTimings;
+
+		$scope.spaces = 0;
+		for (var i = 0; i < $scope.markers.length; i++) {
+			if ($scope.markers[i].space)
+				$scope.spaces++;
+		}
+	};
+
+	$scope.toStenoHero = function () {
+		var outString = '';
+
+		// header
+		outString += '[ti:' + $scope.metadata.title + ']\n';
+		outString += '[ar:' + $scope.metadata.artist + ']\n';
+		outString += '[al:' + $scope.metadata.album + ']\n';
+		outString += '[art: ' + $scope.metadata.art + ']\n';
+		outString += '[la:' + $scope.metadata.language + ']\n';
+		outString += '[length: ' + Formatter.formatSeconds($scope.waveform.length, true) + ']\n';
+		outString += '[dif: ' + $scope.metadata.difficulty + ']\n';
+		outString += '[relyear: ' + $scope.metadata.year + ']\n';
+		outString += '[file: ' + $scope.metadata.file + ']\n';
+
+		var lyricIndex = 0;
+		for (var i = 0; i < $scope.markers.length; i++) {
+			if ($scope.markers[i].space) {
+				outString += '{' + Formatter.formatSeconds($scope.markers[i].position, true) + '}';
+			} else {
+				outString += '\n';
+				outString += '[' + Formatter.formatSeconds($scope.markers[i].position, true) + ']';
+				let words = $scope.lines[lyricIndex].split(' ');
+				if (words.length > 0) {
+					outString += words[0];
+				}
+				if (words.length > 1) {
+					outString += ' ';
+					for (let w = 1; w < words.length; w++) {
+						outString += '<' + Formatter.formatSeconds($scope.wordTimings[lyricIndex][w], true) + '>' + words[w];
+						if (w !== words.length - 1) {
+							outString += ' ';
+						}
+					}
+				}
+				lyricIndex++;
+			}
+		}
+
+		return outString;
+	};
+
+	$scope.fromStenoHero = function (stenoHeroString) {
+
 	};
 });
 

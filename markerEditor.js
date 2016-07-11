@@ -1,3 +1,28 @@
+class Formatter {
+	static formatSeconds (seconds, padMinutes) {
+		var secondsOutput = '' + (seconds % 60);
+		if (seconds % 60 < 10)
+			secondsOutput = '0' + secondsOutput;
+		if (secondsOutput.length === 2)
+			secondsOutput += '.00';
+		else if (secondsOutput.length === 4)
+			secondsOutput += '0';
+
+		if (secondsOutput.length > 5)
+			secondsOutput = secondsOutput.substring(0, 5);
+
+		var minutes = Math.floor(seconds / 60);
+		var minutesOutput = '' + minutes;
+		if (padMinutes && minutesOutput.length === 1) {
+			minutesOutput = '0' + minutesOutput;
+		}
+
+		var output = minutesOutput + ':' + secondsOutput;
+
+		return output;
+	}
+}
+
 class MarkerEditor {
 	constructor (canvas, audioCtx, waveform, startTime, length) {
 		this.canvas = canvas;
@@ -41,7 +66,7 @@ class MarkerEditor {
 		this.zoomLevel = this.drawingBounds.width / this.length;	// pixels per second
 		this.mouseStart = 0;
 		this.panning = false;
-		this.cursor = 0;
+		this.cursor = startTime;
 		this.playing = false;
 		this.listeners = {};
 		this.scroll = 0;
@@ -253,31 +278,12 @@ class MarkerEditor {
 		context.fillStyle = 'black';
 		context.font = this.timecodeHeight + 'px sans-serif';
 
-		var startTimecode = this.formatSeconds(this.totalOffset);
-		var endTimecode = this.formatSeconds(this.totalOffset + this.drawingBounds.width / this.zoomLevel);
+		var startTimecode = Formatter.formatSeconds(this.totalOffset);
+		var endTimecode = Formatter.formatSeconds(this.totalOffset + this.drawingBounds.width / this.zoomLevel);
 		var endTimecodeWidth = context.measureText(endTimecode).width;
 
 		context.fillText(startTimecode, this.drawingBounds.x, this.drawingBounds.y + this.drawingBounds.height + this.timecodeHeight);
 		context.fillText(endTimecode, this.drawingBounds.x + this.drawingBounds.width - endTimecodeWidth, this.drawingBounds.height + this.timecodeHeight);
-	}
-
-	formatSeconds (seconds) {
-		var secondsOutput = '' + (seconds % 60);
-		if (seconds % 60 < 10)
-			secondsOutput = '0' + secondsOutput;
-		if (secondsOutput.length === 2)
-			secondsOutput += '.00';
-		else if (secondsOutput.length === 4)
-			secondsOutput += '0';
-
-		if (secondsOutput.length > 5)
-			secondsOutput = secondsOutput.substring(0, 5);
-
-		var minutes = Math.floor(seconds / 60);
-
-		var output = minutes + ':' + secondsOutput;
-
-		return output;
 	}
 
 	drawMarkers() {

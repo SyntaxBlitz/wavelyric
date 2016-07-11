@@ -157,8 +157,17 @@
 
 					<div class="tabScreen" ng-show="tab === 'wordTiming'">
 						<div ng-repeat="wordTiming in wordTimings">
-							<div class="wordTimingLine">{{lines[$index]}}</div>
+							<div class="wordTimingLine" ng-click="clickLine($index)">{{lines[$index]}}</div>
+							<canvas class="wordTimingCanvas" ng-show="editingLine === $index" id="wordEditor-{{$index}}" width="900" height="150"></canvas>
 						</div>
+					</div>
+
+					<div class="tabScreen" ng-show="tab === 'importExport'">
+						<textarea ng-model="importExportArea"></textarea><br>
+						<button ng-click="importExportArea = toJSON();">Export JSON</button>
+						<button ng-click="fromJSON(importExportArea);">Import JSON</button>
+						<button ng-click="importExportArea = toStenoHero();">Export Steno Hero</button>
+						<button ng-click="fromStenoHero(importExportArea);" disabled="disabled">Import Steno Hero</button>
 					</div>
 				</div>
 			</div>
