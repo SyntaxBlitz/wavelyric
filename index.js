@@ -452,7 +452,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		$scope.markers[$scope.textEditMarker].text = $scope.currentLineInput;
 		$scope.lines[lyricIndex] = $scope.currentLineInput;
 
-		if (oldMarkerText.split(' ').length !== $scope.currentLineInput.split(' ').length) {
+		if (oldMarkerText.split(' ').length !== $scope.currentLineInput.split(' ').length && $scope.wordTimings[lyricIndex]]) {
 			$scope.resetWordTiming($scope.textEditMarker);
 		}
 
@@ -473,7 +473,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		}
 
 		let lyricIndex = $scope.lyricIndexFromMarkerIndex($scope.currentMarker);
-		
+
 		if (!$scope.wordTimings[lyricIndex]) {
 			alert('You need to add the next line to add word timing data before you can split this line.');
 			return;
