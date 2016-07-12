@@ -347,7 +347,7 @@ class MarkerEditor {
 
 	markerHover (mouseX, mouseY) {
 		if (   mouseX < this.drawingBounds.x || mouseX > this.drawingBounds.x + this.drawingBounds.width
-			|| mouseY < this.drawingBounds.y || mouseY > this.drawingBounds.y + this.drawingBounds.height)
+			|| mouseY < this.drawingBounds.y || mouseY > this.drawingBounds.y + this.drawingBounds.height + this.textHeight)
 			return null;
 
 		if (this.markers.length === 0)
