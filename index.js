@@ -1,6 +1,8 @@
 var audioCtx = new window.AudioContext();
 var wavelyricApp = angular.module('wavelyricApp', []);
 
+var spaceText = '<space>'
+
 wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	window.$scope = $scope;
 	$scope.stage = 'start';
@@ -200,7 +202,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				return;
 
 			$scope.markers.splice(afterCursor, 0, {
-				text: '<space>',
+				text: spaceText,
 				position: position,
 				space: true
 			});
@@ -210,7 +212,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			$scope.spaces++;
 		} else {
 			$scope.markers.push({
-				text: '<space>',
+				text: spaceText,
 				position: position,
 				space: true
 			});
@@ -567,7 +569,91 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	};
 
 	$scope.fromStenoHero = function (stenoHeroString) {
+		$scope.spaces = 0;
+		$scope.metadata = {};
+		$scope.markers = [];
+		$scope.lines = [];
+		$scope.wordTimings = [];
 
+		var tryMatchMetadata = function (line) {
+			var metadataKeys = {
+				'ti': 'title',
+				'ar': 'artist',
+				'al': 'album',
+				'art': 'art',
+				'la': 'language',
+				'length': 'length',
+				'dif': 'difficulty',
+				'relyear': 'year',
+				'file': 'file'
+			};
+
+			for (var key in metadataKeys) {
+				if (line.substring(0, key.length + 2) === '[' + key + ':') {
+					return [metadataKeys[key], line.substring(key.length + 2, line.length - 1).trim()];
+				}
+			}
+
+			return null;
+		};
+
+		var getLineData = function (line) {
+			// assume there is no more than one space on a line	(and that it is at the end of the line)
+			var spaceMatch = line.match(/\{([0-9]+:[0-9][0-9]\.[0-9]+)\}/);
+			var space = null;
+			if (spaceMatch) {
+				space = Formatter.parseTimecodeString(spaceMatch[1]);
+				line = line.substring(0, line.indexOf('{'));
+			}
+			line = line.replace('[', '<').replace(']', '>');
+
+			var wordParts = line.split(' ');
+
+			var words = [];
+			var wordTimings = [];
+
+			for (let wordPart of wordParts) {
+				let closeTimecodeIndex = wordPart.indexOf('>');
+				let timecode = wordPart.substring(1, closeTimecodeIndex);
+				let word = wordPart.substring(closeTimecodeIndex + 1).trim();
+
+				words.push(word);
+				wordTimings.push(Formatter.parseTimecodeString(timecode));
+			}
+
+			return [words, wordTimings, space];
+		};
+
+		var lines = stenoHeroString.split('\n').filter(function (line) {
+			return line.trim() !== '';
+		});
+
+		for (var line of lines) {
+			let meta = tryMatchMetadata(line);
+			if (meta) {
+				$scope.metadata[meta[0]] = meta[1];
+			} else {
+				let data = getLineData(line);
+				if (data[0].length > 0) {
+					$scope.markers.push({
+						text: data[0].join(' '),
+						position: data[1][0]
+					});
+					$scope.lines.push(data[0].join(' '));
+					$scope.wordTimings.push(data[1]);
+				}
+
+				if (data[2]) {
+					$scope.markers.push({
+						text: spaceText,
+						position: data[2],
+						space: true
+					});
+
+					$scope.spaces++;
+				}
+			}
+		}
 	};
 });
 
