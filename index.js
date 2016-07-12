@@ -463,6 +463,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		for (var i = 0; i < $scope.markers.length; i++) {
 			if ($scope.markers[i].space)
 				$scope.spaces++;
+			$scope.markers[i].hovering = false;
 		}
 	};
 
