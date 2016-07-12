@@ -16,7 +16,7 @@ class Formatter {
 	}
 
 	static parseTimecodeString (timecodeString) {
-		var matches = timecodeString.match(/([0-9]+):([0-9][0-9]\.[0-9]+)/);
+		var matches = timecodeString.match(/([0-9]+):([0-9][0-9]\.([0-9]+)?)/);
 
 		if (matches) {
 			let minutes = parseInt(matches[1]);
