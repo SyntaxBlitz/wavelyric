@@ -140,7 +140,7 @@
 									</td>
 									<td>
 										<div ng-model="currentLine" ng-hide="editingCurrentLine" id="currentLine" ng-click="editLineText()">{{showCurrentLine()}}</div>
-										<input ng-model="currentLineInput" ng-show="editingCurrentLine" ng-blur="saveEditingText()">
+										<input id="currentLineInput" ng-model="currentLineInput" ng-show="editingCurrentLine" ng-blur="saveEditingText()">
 									</td>
 								</tr>
 								<tr>

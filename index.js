@@ -418,6 +418,10 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		$scope.textEditMarker = $scope.currentMarker;
 		$scope.editingCurrentLine = true;
 		$scope.currentLineInput = $scope.markers[$scope.currentMarker].text;
+
+		window.setTimeout(function () {
+			document.getElementById('currentLineInput').focus();
+		}, 0);
 	};
 
 	$scope.saveEditingText = function () {
