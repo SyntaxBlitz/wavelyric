@@ -599,7 +599,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 		var getLineData = function (line) {
 			// assume there is no more than one space on a line	(and that it is at the end of the line)
-			var spaceMatch = line.match(/\{([0-9]+:[0-9][0-9]\.[0-9]+)\}/);
+			var spaceMatch = line.match(/\{([^}]+)\}/);
 			var space = null;
 			if (spaceMatch) {
 				space = Formatter.parseTimecodeString(spaceMatch[1]);
