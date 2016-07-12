@@ -139,7 +139,9 @@
 										CURRENT LINE:
 									</td>
 									<td>
-										<div ng-model="currentLine" ng-hide="editingCurrentLine" id="currentLine" ng-click="editLineText()">{{showCurrentLine()}}</div>
+										<div ng-hide="editingCurrentLine" id="currentLine" ng-click="editLineText()" ng-class="holdingShift && !markers[currentMarker].space? 'holdingShift' : ''">
+											<span ng-repeat="word in showCurrentLine() track by $index"><span id="{{'invididualLineWord-' + $index}}" class="individualLineWord" ng-click="splitAtWord($event, $index)">{{showCurrentLine()[$index]}}</span>&nbsp;</span>
+										</div>
 										<input id="currentLineInput" ng-model="currentLineInput" ng-show="editingCurrentLine" ng-blur="saveEditingText()">
 									</td>
 								</tr>

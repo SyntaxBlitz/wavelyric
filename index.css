@@ -82,6 +82,11 @@ header img {
 	color: #555;
 }
 
+.holdingShift .individualLineWord:hover {
+	background-color: #ff9;
+	cursor: pointer;
+}
+
 .wordTimingLine {
 	padding: 10px;
 	cursor: pointer;

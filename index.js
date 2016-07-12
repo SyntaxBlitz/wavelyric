@@ -54,6 +54,11 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				return;
 			}
 
+			if (e.shiftKey) {
+				$scope.holdingShift = true;
+				$scope.$apply();
+			}
+
 			if (e.keyCode === 32) {	// space
 				if ($scope.lineEditor.playing)
 					$scope.lineEditor.stop();
@@ -66,6 +71,13 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				$scope.setNextMarker();
 			} else if (e.keyCode === 83) {	// s
 				$scope.addSpace();
+			}
+		},
+
+		keyup: function (e) {
+			if (!e.shiftKey) {
+				$scope.holdingShift = false;
+				$scope.$apply();
 			}
 		}
 	};
@@ -86,10 +98,12 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.registerLineTimingListeners = function () {
 		document.addEventListener('keydown', $scope.lineTimingListeners.keydown);
+		document.addEventListener('keyup', $scope.lineTimingListeners.keyup);
 	};
 
 	$scope.unRegisterLineTimingListeners = function () {
 		document.removeEventListener('keydown', $scope.lineTimingListeners.keydown);
+		document.removeEventListener('keyup', $scope.lineTimingListeners.keyup);
 	};
 	
 	$scope.registerWordTimingListeners = function () {
@@ -209,9 +223,9 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.showCurrentLine = function () {
 		if ($scope.currentMarker === null) {
-			return '';
+			return [];
 		} else {
-			return $scope.markers[$scope.currentMarker].text;
+			return $scope.markers[$scope.currentMarker].text.split(' ');
 		}
 	};
 
@@ -415,6 +429,10 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			return;
 		}
 
+		if ($scope.holdingShift) {
+			return;
+		}
+
 		$scope.textEditMarker = $scope.currentMarker;
 		$scope.editingCurrentLine = true;
 		$scope.currentLineInput = $scope.markers[$scope.currentMarker].text;
@@ -443,6 +461,42 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.cancelEditingText = function () {
 		$scope.editingCurrentLine = false;
+	};
+
+	$scope.splitAtWord = function (e, index) {
+		if ($scope.markers[$scope.currentMarker].space) {
+			return;
+		}
+
+		if (!$scope.holdingShift) {
+			return;
+		}
+
+		let lyricIndex = $scope.lyricIndexFromMarkerIndex($scope.currentMarker);
+		
+		if (!$scope.wordTimings[lyricIndex]) {
+			alert('You need to add the next line to add word timing data before you can split this line.');
+			return;
+		}
+
+		e.stopPropagation();
+		e.preventDefault();
+		document.getSelection().removeAllRanges();
+
+		$scope.wordTimings.splice(lyricIndex + 1, 0, $scope.wordTimings[lyricIndex].slice(index));
+		$scope.wordTimings[lyricIndex] = $scope.wordTimings[lyricIndex].slice(0, index);
+		let lineText = $scope.lines[lyricIndex];
+		let words = lineText.split(' ');
+		let firstHalf = words.slice(0, index).join(' ');
+		let secondHalf = words.slice(index).join(' ');
+		$scope.lines[lyricIndex] = firstHalf;
+		$scope.lines.splice(lyricIndex + 1, 0, secondHalf);
+
+		$scope.markers[$scope.currentMarker].text = firstHalf;
+		$scope.markers.splice($scope.currentMarker + 1, 0, {
+			text: secondHalf,
+			position: $scope.wordTimings[lyricIndex + 1][0]
+		});
 	};
 
 	$scope.toJSON = function () {
