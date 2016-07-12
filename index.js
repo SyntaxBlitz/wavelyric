@@ -50,6 +50,10 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.lineTimingListeners = {
 		keydown: function (e) {
+			if ($scope.editingCurrentLine) {
+				return;
+			}
+
 			if (e.keyCode === 32) {	// space
 				if ($scope.lineEditor.playing)
 					$scope.lineEditor.stop();
@@ -248,6 +252,8 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	};
 
 	$scope.onChangeCurrentMarker = function (newMarker, oldMarker) {
+		$scope.cancelEditingText();
+
 		$scope.currentMarker = newMarker;
 		$scope.$apply();
 	};
@@ -308,17 +314,23 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			markerLength = $scope.markers[marker + 1].position - $scope.markers[marker].position;
 		}
 
-		let lyricIndex = -1;
-		for (let i = 0; i <= marker; i++) {
-			if (!$scope.markers[i].space)
-				lyricIndex++;
-		}
+		let lyricIndex = $scope.lyricIndexFromMarkerIndex(marker);
 
 		$scope.wordTimings[lyricIndex] = [];
 		let wordCount = $scope.markers[marker].text.split(' ').length;		
 		for (let i = 0; i < wordCount; i++) {
 			$scope.wordTimings[lyricIndex][i] = $scope.markers[marker].position + i * markerLength / wordCount;
 		}
+	};
+
+	$scope.lyricIndexFromMarkerIndex = function (marker) {
+		var lyricIndex = -1;
+		for (let i = 0; i <= marker; i++) {
+			if (!$scope.markers[i].space)
+				lyricIndex++;
+		}
+
+		return lyricIndex;
 	};
 
 	$scope.mergeWordTimings = function (marker, lyricIndex) {
@@ -396,6 +408,37 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		for (let i = 0; i < $scope.activeWordEditor.markers.length; i++) {
 			$scope.wordTimings[$scope.editingLine][i] = $scope.activeWordEditor.markers[i].position;
 		}
+	};
+
+	$scope.editLineText = function () {
+		if ($scope.markers[$scope.currentMarker].space) {
+			return;
+		}
+
+		$scope.textEditMarker = $scope.currentMarker;
+		$scope.editingCurrentLine = true;
+		$scope.currentLineInput = $scope.markers[$scope.currentMarker].text;
+	};
+
+	$scope.saveEditingText = function () {
+		if (!$scope.editingCurrentLine)
+			return;
+
+		var lyricIndex = $scope.lyricIndexFromMarkerIndex($scope.textEditMarker);
+		var oldMarkerText = $scope.markers[$scope.textEditMarker].text;
+
+		$scope.markers[$scope.textEditMarker].text = $scope.currentLineInput;
+		$scope.lines[lyricIndex] = $scope.currentLineInput;
+
+		if (oldMarkerText.split(' ').length !== $scope.currentLineInput.split(' ').length) {
+			$scope.resetWordTiming($scope.textEditMarker);
+		}
+
+		$scope.editingCurrentLine = false;
+	};
+
+	$scope.cancelEditingText = function () {
+		$scope.editingCurrentLine = false;
 	};
 
 	$scope.toJSON = function () {

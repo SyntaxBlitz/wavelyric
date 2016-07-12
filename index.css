@@ -73,7 +73,7 @@ header img {
 	color: #777;
 }
 
-#lines div {
+#lines div, #lines input {
 	font-size: 18pt;
 }
 
