@@ -217,13 +217,14 @@ class MarkerEditor {
 			let lowestAllowed = this.currentlyDraggingIndex * this.minimumMarkerDistance + this.startTime;
 			let highestAllowed = this.length - ((this.markers.length - 1) - this.currentlyDraggingIndex) * this.minimumMarkerDistance + this.startTime;
 
+			let oldPosition = currentDrag.position;
 			currentDrag.position = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset - this.dragDeltaSeconds;
 			if (currentDrag.position < lowestAllowed)
 				currentDrag.position = lowestAllowed;
 			if (currentDrag.position > highestAllowed)
 				currentDrag.position = highestAllowed;
 
-			if (this.onMoveMarker) {
+			if (this.onMoveMarker && oldPosition !== currentDrag.position) {
 				this.onMoveMarker(this.currentlyDraggingIndex);
 			}
 
