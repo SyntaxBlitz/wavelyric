@@ -452,7 +452,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		$scope.markers[$scope.textEditMarker].text = $scope.currentLineInput;
 		$scope.lines[lyricIndex] = $scope.currentLineInput;
 
-		if (oldMarkerText.split(' ').length !== $scope.currentLineInput.split(' ').length && $scope.wordTimings[lyricIndex]]) {
+		if (oldMarkerText.split(' ').length !== $scope.currentLineInput.split(' ').length && $scope.wordTimings[lyricIndex]) {
 			$scope.resetWordTiming($scope.textEditMarker);
 		}
 
