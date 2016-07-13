@@ -71,6 +71,19 @@ header img {
 	font-size: 28pt;
 }
 
+#metadataTable {
+	border-spacing: 8px;
+	font-size: 14pt;
+	width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#metadataTable input, #metadataTable select {
+	font-size: 12pt;
+	padding: 2px;
+}
+
 #lyrics textarea, #import textarea {
 	width: 880px;
 	height: 500px;
