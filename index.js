@@ -56,6 +56,8 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 				return;
 			}
 
+			let caught = true;
+
 			if (e.shiftKey) {
 				$scope.holdingShift = true;
 				$scope.$apply();
@@ -66,13 +68,43 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 					$scope.lineEditor.stop();
 				else
 					$scope.lineEditor.play();
-
-				e.stopPropagation();
-				e.preventDefault();
 			} else if (e.keyCode === 78) {	// n
 				$scope.setNextMarker();
 			} else if (e.keyCode === 83) {	// s
 				$scope.addSpace();
+			} else if (e.keyCode === 33) {	// page up
+				if ($scope.currentMarker > 0) {
+					$scope.lineEditor.cursor = $scope.markers[$scope.currentMarker - 1].position;
+				}
+				$scope.lineEditor.scrollToCursor();
+			} else if (e.keyCode === 34) {	// page down
+				if ($scope.currentMarker < $scope.markers.length - 1) {
+					$scope.lineEditor.cursor = $scope.markers[$scope.currentMarker + 1].position;
+				}
+				$scope.lineEditor.scrollToCursor();
+			} else if (e.keyCode === 37) {	// left arrow
+				$scope.lineEditor.cursor -= 10 / $scope.lineEditor.zoomLevel;
+				if ($scope.lineEditor.cursor < 0)
+					$scope.lineEditor.cursor = 0;
+				$scope.lineEditor.scrollToCursor();
+			} else if (e.keyCode === 39) {	// right arrow
+				$scope.lineEditor.cursor += 10 / $scope.lineEditor.zoomLevel;
+				if ($scope.lineEditor.cursor > $scope.waveform.length)
+					$scope.lineEditor.cursor = $scope.waveform.length;
+				$scope.lineEditor.scrollToCursor();
+			} else if (e.keyCode === 36) {	// home
+				$scope.lineEditor.cursor = 0;
+				$scope.lineEditor.scrollToCursor();
+			} else if (e.keyCode === 35) {	// end
+				$scope.lineEditor.cursor = $scope.waveform.length;
+				$scope.lineEditor.scrollToCursor();
+			} else {
+				caught = false;
+			}
+
+			if (caught) {
+				e.stopPropagation();
+				e.preventDefault();
 			}
 		},
 

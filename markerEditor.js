@@ -436,6 +436,15 @@ class MarkerEditor {
 		this.clipOffset();
 	};
 
+	scrollToCursor () {
+		if (this.cursor < this.totalOffset) {
+			this.totalOffset = this.cursor;
+		}
+		if (this.cursor > this.totalOffset + this.drawingBounds.width / this.zoomLevel) {
+			this.totalOffset = this.cursor - this.drawingBounds.width / this.zoomLevel;
+		}
+	}
+
 	play () {
 		if (this.playing)
 			return;
