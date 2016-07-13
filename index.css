@@ -37,7 +37,41 @@ header img {
 	background-color: #ff9;
 }
 
-#lyrics textarea {
+#newOrImport {
+	margin-bottom: 200px;
+}
+
+#newSong, #importSong {
+	width: 250px;
+    height: 150px;
+    font-size: 14pt;
+    padding: 10px;
+    border: 1px dashed black;
+}
+
+#newSong {
+	text-align: right;
+    float: left;
+    margin-left: 150px;
+}
+
+#importSong {
+	text-align: left;
+    float: right;
+    margin-right: 150px;
+}
+
+#newSong:hover, #importSong:hover {
+	background-color: #eee;
+	border: 1px solid black;
+	cursor: pointer;
+}
+
+.bigWords {
+	font-size: 28pt;
+}
+
+#lyrics textarea, #import textarea {
 	width: 880px;
 	height: 500px;
 	padding: 10px;
@@ -46,7 +80,7 @@ header img {
 	margin-bottom: 10px;
 }
 
-#lyrics button {
+#lyrics button, #import button {
 	float: right;
 }
 

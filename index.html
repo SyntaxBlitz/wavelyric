@@ -31,6 +31,18 @@
 				<div id="loading" ng-show="stage === 'loading'">
 					Loading audio file...
 				</div>
+				
+				<div id="newOrImport" ng-show="stage === 'newOrImport'">
+					<div id="newSong" ng-click="stage = 'lyrics'">
+						<div class="bigWords">New song</div>
+						Start from scratch using the audio file you chose.
+					</div>
+
+					<div id="importSong" ng-click="stage = 'import'">
+						<div class="bigWords">Import song</div>
+						Import a JSON file from wavelyric or a .lrc file from Steno Hero.
+					</div>
+				</div>
 
 				<div id="lyrics" ng-show="stage === 'lyrics'">
 					Enter the song's lyrics:<br>
@@ -38,12 +50,18 @@
 					<button ng-click="loadLyrics()" ng-disabled="lyricsField === ''">Finished</button>
 				</div>
 
+				<div id="import" ng-show="stage === 'import'">
+					Enter JSON or a .lrc file:<br>
+					<textarea ng-model="importField"></textarea><br>
+					<button ng-click="import()" ng-disabled="importField === ''">Finished</button>
+				</div>
+
 				<div id="main" ng-show="stage === 'main'">
 					<div id="tabs">
 						<div class="tab" ng-class="tab === 'metadata' ? 'highlight': ''" ng-click="tab = 'metadata'">Metadata</div>
 						<div class="tab" ng-class="tab === 'lineTiming' ? 'highlight': ''" ng-click="tab = 'lineTiming'">Line timing</div>
 						<div class="tab" ng-class="tab === 'wordTiming' ? 'highlight': ''" ng-click="tab = 'wordTiming'">Word timing</div>
-						<div class="tab" ng-class="tab === 'importExport' ? 'highlight': ''" ng-click="tab = 'importExport'">Import/Export</div>
+						<div class="tab" ng-class="tab === 'export' ? 'highlight': ''" ng-click="tab = 'export'">Export</div>
 					</div>
 					<div class="tabScreen" ng-show="tab === 'metadata'">
 						<table>
@@ -181,12 +199,10 @@
 						</div>
 					</div>
 
-					<div class="tabScreen" ng-show="tab === 'importExport'">
-						<textarea ng-model="importExportArea"></textarea><br>
-						<button ng-click="importExportArea = toJSON();">Export JSON</button>
-						<button ng-click="fromJSON(importExportArea);">Import JSON</button>
-						<button ng-click="importExportArea = toStenoHero();">Export Steno Hero</button>
-						<button ng-click="fromStenoHero(importExportArea);">Import Steno Hero</button>
+					<div class="tabScreen" ng-show="tab === 'export'">
+						<textarea ng-model="exportArea"></textarea><br>
+						<button ng-click="exportArea = toJSON();">Export JSON</button>
+						<button ng-click="exportArea = toStenoHero();">Export Steno Hero</button>
 					</div>
 				</div>
 			</div>

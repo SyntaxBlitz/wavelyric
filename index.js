@@ -557,9 +557,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		});
 	};
 
-	$scope.fromJSON = function (jsonString) {
-		let jsonObject = JSON.parse(jsonString);
-
+	$scope.fromJSON = function (jsonObject) {
 		$scope.metadata = jsonObject.metadata;
 		$scope.lines = jsonObject.lines;
 		$scope.markers = jsonObject.markers;
@@ -701,6 +699,17 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			}
 		}
 	};
+
+	$scope.import = function () {
+		try {
+			var json = JSON.parse($scope.importField);
+			$scope.fromJSON(json);
+		} catch (e) {
+			$scope.fromStenoHero($scope.importField);
+		}
+
+		$scope.stage = 'main';
+	};
 });
 
 var registerEventListeners = function (dropZone, $scope) {
@@ -745,7 +754,7 @@ var registerEventListeners = function (dropZone, $scope) {
 			reader.onload = function (readerEvent) {
 				audioCtx.decodeAudioData(readerEvent.target.result).then(function (audioBuffer) {
 					$scope.waveform = new Waveform(audioBuffer, 1000);
-					$scope.stage = 'lyrics';
+					$scope.stage = 'newOrImport';
 					$scope.$apply();
 				});
 			};
