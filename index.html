@@ -200,7 +200,7 @@
 					</div>
 
 					<div class="tabScreen" ng-show="tab === 'export'">
-						<textarea ng-model="exportArea"></textarea><br>
+						<textarea ng-model="exportArea" id="exportArea"></textarea><br>
 						<button ng-click="exportArea = toJSON();">Export JSON</button>
 						<button ng-click="exportArea = toStenoHero();">Export Steno Hero</button>
 					</div>
