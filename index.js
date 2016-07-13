@@ -554,18 +554,37 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		});
 	};
 
-	$scope.fromJSON = function (jsonObject) {
-		$scope.metadata = jsonObject.metadata;
-		$scope.lines = jsonObject.lines;
-		$scope.markers = jsonObject.markers;
-		$scope.wordTimings = jsonObject.wordTimings;
+	$scope.showJSON = function () {
+		$scope.showExportArea = true;
+		$scope.exportArea = $scope.toJSON();
+	};
 
-		$scope.spaces = 0;
-		for (var i = 0; i < $scope.markers.length; i++) {
-			if ($scope.markers[i].space)
-				$scope.spaces++;
-			$scope.markers[i].hovering = false;
+	$scope.saveJSON = function () {
+		$scope.saveTextFile($scope.toJSON(), '.json', 'application/json');
+	};
+
+	$scope.showStenoHero = function () {
+		$scope.showExportArea = true;
+		$scope.exportArea = $scope.toStenoHero();
+	};
+
+	$scope.saveStenoHero = function () {
+		$scope.saveTextFile($scope.toStenoHero(), '.lrc', 'text/plain');
+	}
+
+	$scope.saveTextFile = function (content, extension, mime) {
+		var title = undefined;
+		if ($scope.metadata.title) {
+			title = $scope.metadata.title + extension;
 		}
+
+		saveAs(
+			new Blob(
+				[content],
+				{type: mime + ';charset=utf-8'}
+			),
+			title
+		);
 	};
 
 	$scope.toStenoHero = function () {
@@ -607,6 +626,20 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		}
 
 		return outString;
+	};
+
+	$scope.fromJSON = function (jsonObject) {
+		$scope.metadata = jsonObject.metadata;
+		$scope.lines = jsonObject.lines;
+		$scope.markers = jsonObject.markers;
+		$scope.wordTimings = jsonObject.wordTimings;
+
+		$scope.spaces = 0;
+		for (var i = 0; i < $scope.markers.length; i++) {
+			if ($scope.markers[i].space)
+				$scope.spaces++;
+			$scope.markers[i].hovering = false;
+		}
 	};
 
 	$scope.fromStenoHero = function (stenoHeroString) {

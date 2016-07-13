@@ -152,9 +152,17 @@ header img {
 	background-color: #eee;
 }
 
+.exportSection {
+	margin-bottom: 20px;
+}
+
+.exportSection button {
+	display: block;
+}
+
 #exportArea {
 	width: 880px;
-	height: 500px;
+	height: 300px;
 	padding: 10px;
 	margin: 0;
 	margin-top: 10px;

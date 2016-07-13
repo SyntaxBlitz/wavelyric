@@ -3,6 +3,7 @@
 <html lang="en" ng-app="wavelyricApp">
 	<head>
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+		<script src="FileSaver.js"></script>
 		<script src="waveform.js"></script>
 		<script src="markerEditor.js"></script>
 		<script src="index.js"></script>
@@ -200,10 +201,17 @@
 					</div>
 
 					<div class="tabScreen" ng-show="tab === 'export'">
-						<p>Export to <strong>JSON</strong> for later use with wavelyric (more precision). Export to <strong>Steno Hero</strong> for use with Steno Arcade</p>
-						<textarea ng-model="exportArea" id="exportArea"></textarea><br>
-						<button ng-click="exportArea = toJSON();">Export JSON</button>
-						<button ng-click="exportArea = toStenoHero();">Export Steno Hero</button>
+						<p>Export to <strong>JSON</strong> for later use with wavelyric (more precision, works with unfinished projects). Export to <strong>Steno Hero</strong> for use with Steno Arcade.</p>
+						<div id="jsonExports" class="exportSection">
+							<button ng-click="showJSON();">Show JSON</button>
+							<button ng-click="saveJSON();">Download JSON</button>
+						</div>
+						<div id="stenoHeroExports" class="exportSection">
+							<button ng-click="showStenoHero();">Show Steno Hero</button>
+							<button ng-click="saveStenoHero();">Download Steno Hero</button>
+						</div>
+						<textarea ng-model="exportArea" id="exportArea" ng-show="showExportArea"></textarea>
+						<button ng-click="showExportArea = false;" ng-show="showExportArea">Hide</button>
 					</div>
 				</div>
 			</div>
