@@ -30,17 +30,17 @@ class Formatter {
 }
 
 class MarkerEditor {
-	constructor (canvas, audioCtx, waveform, startTime, length) {
+	constructor (canvas, audioCtx, waveform, startTime, length, textHeight, lowerPadding) {
 		this.canvas = canvas;
 		this.audioCtx = audioCtx;
 		this.waveform = waveform;
 		this.startTime = startTime;
 		this.length = length;
+		this.textHeight = textHeight;
+		this.lowerPadding = lowerPadding;
 
 		// publicly configurable post-construction
-		this.textHeight = 36;
 		this.timecodeHeight = 10;
-		this.lowerPadding = 50;
 		this.firstMarkerLocked = false;	// only to be set if the starting marker is at the same point as startTime. otherwise minimumDistance adjusts get wonky
 		this.colours = {
 			waveformColour: 'black',

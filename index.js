@@ -31,12 +31,11 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.$watch('tab', function (newTab, oldTab) {
 		if (newTab === 'lineTiming') {
-			$scope.lineEditor = new MarkerEditor(document.getElementById('lineTimingCanvas'), audioCtx, $scope.waveform, 0, $scope.waveform.length);
+			$scope.lineEditor = new MarkerEditor(document.getElementById('lineTimingCanvas'), audioCtx, $scope.waveform, 0, $scope.waveform.length, 18, 10);
 			$scope.lineEditor.onChangeCurrentMarker = $scope.onChangeCurrentMarker;
 			$scope.lineEditor.onShiftClickMarker = $scope.onShiftClickMarker;
 			$scope.lineEditor.onMoveMarker = $scope.onMoveMarker;
 			$scope.lineEditor.markers = $scope.markers;
-			$scope.lineEditor.textHeight = 18;
 			$scope.registerLineTimingListeners();
 		} else if (oldTab === 'lineTiming') {
 			$scope.lineEditor.destroy();
@@ -436,10 +435,8 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			canvas.width = length * $scope.waveform.maxResolution;
 		}
 
-		$scope.activeWordEditor = new MarkerEditor(canvas, audioCtx, $scope.waveform, startTime, length);
+		$scope.activeWordEditor = new MarkerEditor(canvas, audioCtx, $scope.waveform, startTime, length, 36, 20);
 		$scope.registerWordTimingListeners();
-		$scope.activeWordEditor.textHeight = 36;
-		$scope.activeWordEditor.lowerPadding = 20;
 		$scope.activeWordEditor.firstMarkerLocked = true;
 		$scope.activeWordEditor.onMoveMarker = $scope.wordMove;
 
