@@ -27,6 +27,8 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 	$scope.wordTimings = [];
 
+	$scope.oggQuality = '0.5';
+
 	registerEventListeners($scope.dropZone, $scope);
 
 	$scope.$watch('tab', function (newTab, oldTab) {
@@ -740,6 +742,22 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 		$scope.stage = 'main';
 	};
+
+	$scope.beginOggExport = function () {
+		$scope.oggExportInProgress = true;
+
+		$scope.oggEncoder.encode(parseFloat($scope.oggQuality)).then(function (blob) {
+			$scope.oggExportInProgress = false;
+
+			let title = undefined;
+			if ($scope.metadata.title) {
+				title = $scope.metadata.title + '.ogg'
+			};
+			saveAs(blob, title);
+
+			$scope.$apply();
+		})
+	};
 });
 
 var registerEventListeners = function (dropZone, $scope) {
@@ -784,6 +802,11 @@ var registerEventListeners = function (dropZone, $scope) {
 			reader.onload = function (readerEvent) {
 				audioCtx.decodeAudioData(readerEvent.target.result).then(function (audioBuffer) {
 					$scope.waveform = new Waveform(audioBuffer, 1000);
+
+					// we have to construct the ogg encoder in advance so the script has time to pre-initialise.
+					// this doesn't create an actual encoder object, but does set up the web worker.
+					$scope.oggEncoder = new OggEncoder(audioBuffer);
+
 					$scope.stage = 'newOrImport';
 					$scope.$apply();
 				});
