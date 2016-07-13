@@ -476,17 +476,22 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 
 		let lyricIndex = $scope.lyricIndexFromMarkerIndex($scope.currentMarker);
 
+		let newPosition;
+		let mustResetWordTiming = false;
+
 		if (!$scope.wordTimings[lyricIndex]) {
-			alert('You need to add the next line to add word timing data before you can split this line.');
-			return;
+			if ($scope.lineEditor.cursor >= $scope.markers[$scope.markers.length - 1].position + $scope.lineEditor.minimumMarkerDistance) {
+				newPosition = $scope.lineEditor.cursor;
+				mustResetWordTiming = true;
+			} else {
+				return;
+			}
+		} else {
+			$scope.wordTimings.splice(lyricIndex + 1, 0, $scope.wordTimings[lyricIndex].slice(index));
+			$scope.wordTimings[lyricIndex] = $scope.wordTimings[lyricIndex].slice(0, index);
+			newPosition = $scope.wordTimings[lyricIndex + 1][0];
 		}
 
-		e.stopPropagation();
-		e.preventDefault();
-		document.getSelection().removeAllRanges();
-
-		$scope.wordTimings.splice(lyricIndex + 1, 0, $scope.wordTimings[lyricIndex].slice(index));
-		$scope.wordTimings[lyricIndex] = $scope.wordTimings[lyricIndex].slice(0, index);
 		let lineText = $scope.lines[lyricIndex];
 		let words = lineText.split(' ');
 		let firstHalf = words.slice(0, index).join(' ');
@@ -495,10 +500,19 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		$scope.lines.splice(lyricIndex + 1, 0, secondHalf);
 
 		$scope.markers[$scope.currentMarker].text = firstHalf;
+
 		$scope.markers.splice($scope.currentMarker + 1, 0, {
 			text: secondHalf,
-			position: $scope.wordTimings[lyricIndex + 1][0]
+			position: newPosition
 		});
+
+		if (mustResetWordTiming) {
+			$scope.resetWordTiming(lyricIndex);
+		}
+
+		e.stopPropagation();
+		e.preventDefault();
+		document.getSelection().removeAllRanges();
 	};
 
 	$scope.toJSON = function () {
