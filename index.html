@@ -155,9 +155,26 @@
 								</tr>
 							</table>
 						</div>
+
+						<div id="lineTimingInstructions">
+							<p><strong>Space</strong> to start/stop playback.</p>
+							<p><strong>N</strong> to place the next line marker, <strong>S</strong> to place <dfn title="A period during which the player cannot continue to type the previous line but may not yet start the next">space</dfn></p>
+							<p><strong>Drag</strong> markers with the mouse to reposition them. The dragged line and the one before it will have their word timings reset.</p>
+							<p><strong>Shift-click</strong> a space marker to remove it or a line marker to merge it with the previous line.</p>
+							<p><strong>Shift-click</strong> a word in the "current line" area to split the line at that word.</p>
+							<p><strong>Click</strong> the line in the "current line" area to edit the line. If you change the number of words, that line's word timing information will be reset.</p>
+							<p><strong>Page up/page down</strong> to move to the previous/next marker.</p>
+							<p><strong>Click</strong> on a marker to move the cursor to the marker.</p>
+							<p><strong>Arrow keys</strong> or <strong>click</strong> to move the cursor.</p>
+							<p><strong>Home/end</strong> to move to the beginning or end of the song.</p>
+							<p><strong><a href="mailto:timothy@tacosareawesome.com" target="_blank">Email</a></strong> me if you need help. I know it's a bit confusing at first!</p>
+						</div>
 					</div>
 
 					<div class="tabScreen" ng-show="tab === 'wordTiming'">
+						<div id="wordTimingInstructions">
+							<strong>Click</strong> on a line to time individual words.
+						</div>
 						<div ng-repeat="wordTiming in wordTimings">
 							<div class="wordTimingLine" ng-click="clickLine($index)">{{lines[$index]}}</div>
 							<canvas class="wordTimingCanvas" ng-show="editingLine === $index" id="wordEditor-{{$index}}" width="900" height="150"></canvas>

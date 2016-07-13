@@ -87,6 +87,15 @@ header img {
 	cursor: pointer;
 }
 
+#lineTimingInstructions dfn {
+	border-bottom: 1px dashed black;
+	cursor: help;
+}
+
+#wordTimingInstructions {
+	margin-bottom: 20px;
+}
+
 .wordTimingLine {
 	padding: 10px;
 	cursor: pointer;
