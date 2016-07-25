@@ -27,217 +27,220 @@
 				</div>
 			</div>
 		</div>
-		<div id="container">
-			<header>
+		<header>
+			<div class="header-inner">
 				<img src="assets/logo.png">
-			</header>
-			
-			<div id="mainPanel">
-				<div id="welcome" ng-show="stage === 'start'">
-					<p>Hey there! This is wavelyric.</p>
+			</div>
+		</header>
+		<div id="container">
+			<div class="narrow">
+				<div id="mainPanel">
+					<div id="welcome" ng-show="stage === 'start'">
+						<p>Hey there! This is wavelyric.</p>
 
-					<p>Here, you can set up precise lyric timings for songs. Then, you can export the data into a format appropriate for <a href="http://store.steampowered.com/app/449000/">Steno Hero</a>.</p>
+						<p>Here, you can set up precise lyric timings for songs. Then, you can export the data into a format appropriate for <a href="http://store.steampowered.com/app/449000/">Steno Hero</a>.</p>
 
-					<p>Drag and drop a music file from your computer anywhere on the page to get started. Make sure your browser is up-to-date!</p>
-				</div>
-
-				<div id="loading" ng-show="stage === 'loading'">
-					Loading audio file...
-				</div>
-				
-				<div id="newOrImport" ng-show="stage === 'newOrImport'">
-					<div id="newSong" ng-click="stage = 'lyrics'">
-						<div class="bigWords">New song</div>
-						Start from scratch using the audio file you chose.
+						<p>Drag and drop a music file from your computer anywhere on the page to get started. Make sure your browser is up-to-date!</p>
 					</div>
 
-					<div id="importSong" ng-click="stage = 'import'">
-						<div class="bigWords">Import song</div>
-						Import a JSON file from wavelyric or a .lrc file from Steno Hero.
+					<div id="loading" ng-show="stage === 'loading'">
+						Loading audio file...
 					</div>
-				</div>
+					
+					<div id="newOrImport" ng-show="stage === 'newOrImport'">
+						<div id="newSong" ng-click="stage = 'lyrics'">
+							<div class="bigWords">New song</div>
+							Start from scratch using the audio file you chose.
+						</div>
 
-				<div id="lyrics" ng-show="stage === 'lyrics'">
-					Enter the song's lyrics:<br>
-					<textarea ng-model="lyricsField"></textarea><br>
-					<button ng-click="loadLyrics()" ng-disabled="lyricsField === ''">Finished</button>
-				</div>
-
-				<div id="import" ng-show="stage === 'import'">
-					Enter JSON or a .lrc file:<br>
-					<textarea ng-model="importField"></textarea><br>
-					<button ng-click="import()" ng-disabled="importField === ''">Finished</button>
-				</div>
-
-				<div id="main" ng-show="stage === 'main'">
-					<div id="tabs">
-						<div class="tab" ng-class="tab === 'metadata' ? 'highlight': ''" ng-click="tab = 'metadata'">Metadata</div>
-						<div class="tab" ng-class="tab === 'lineTiming' ? 'highlight': ''" ng-click="tab = 'lineTiming'">Line timing</div>
-						<div class="tab" ng-class="tab === 'wordTiming' ? 'highlight': ''" ng-click="tab = 'wordTiming'">Word timing</div>
-						<div class="tab" ng-class="tab === 'export' ? 'highlight': ''" ng-click="tab = 'export'">Export</div>
-					</div>
-					<div class="tabScreen" ng-show="tab === 'metadata'">
-						<table id="metadataTable">
-							<tbody>
-								<tr>
-									<td>
-										Title:
-									</td>
-									<td>
-										<input ng-model='metadata.title'>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Artist:
-									</td>
-									<td>
-										<input ng-model='metadata.artist'>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Album:
-									</td>
-									<td>
-										<input ng-model='metadata.album'>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Released (year):
-									</td>
-									<td>
-										<input ng-model='metadata.year'>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Language:
-									</td>
-									<td>
-										<input ng-model='metadata.language'>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Album art path:
-									</td>
-									<td>
-										<input ng-model='metadata.art'>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Music file path:
-									</td>
-									<td>
-										<input ng-model='metadata.file'>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										Difficulty:
-									</td>
-									<td>
-										<select ng-model="metadata.difficulty">
-											<option value="1">Very easy</option>
-											<option value="2">Easy</option>
-											<option value="3">Normal</option>
-											<option value="4">Hard</option>
-											<option value="5">Very hard</option>
-										</select>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+						<div id="importSong" ng-click="stage = 'import'">
+							<div class="bigWords">Import song</div>
+							Import a JSON file from wavelyric or a .lrc file from Steno Hero.
+						</div>
 					</div>
 
-					<div class="tabScreen" ng-show="tab === 'lineTiming'">
-						<canvas width="900" height="200" id="lineTimingCanvas"></canvas>
-						<div id="lines">
-							<table>
-								<tr>
-									<td class="lineLabel">
-										PREVIOUS LINE:
-									</td>
-									<td>
-										<div ng-model="previousLine" id="previousLine">{{showPreviousLine()}}</div>
-									</td>
-								</tr>
-								<tr>
-									<td class="lineLabel">
-										CURRENT LINE:
-									</td>
-									<td>
-										<div ng-hide="editingCurrentLine" id="currentLine" ng-click="editLineText()" ng-class="holdingShift && !markers[currentMarker].space? 'holdingShift' : ''">
-											<span ng-repeat="word in showCurrentLine() track by $index"><span id="{{'invididualLineWord-' + $index}}" class="individualLineWord" ng-click="splitAtWord($event, $index)">{{showCurrentLine()[$index]}}</span>&nbsp;</span>
-										</div>
-										<input id="currentLineInput" ng-model="currentLineInput" ng-show="editingCurrentLine" ng-blur="saveEditingText()">
-									</td>
-								</tr>
-								<tr>
-									<td class="lineLabel">
-										NEXT LINE:
-									</td>
-									<td>
-										<div ng-model="nextLine" id="nextLine">{{showNextLine()}}</div>
-									</td>
-								</tr>
+					<div id="lyrics" ng-show="stage === 'lyrics'">
+						Enter the song's lyrics:<br>
+						<textarea ng-model="lyricsField"></textarea><br>
+						<button ng-click="loadLyrics()" ng-disabled="lyricsField === ''">Finished</button>
+					</div>
+
+					<div id="import" ng-show="stage === 'import'">
+						Enter JSON or a .lrc file:<br>
+						<textarea ng-model="importField"></textarea><br>
+						<button ng-click="import()" ng-disabled="importField === ''">Finished</button>
+					</div>
+
+					<div id="main" ng-show="stage === 'main'">
+						<div id="tabs">
+							<div class="tab" ng-class="tab === 'metadata' ? 'highlight': ''" ng-click="tab = 'metadata'">Metadata</div>
+							<div class="tab" ng-class="tab === 'lineTiming' ? 'highlight': ''" ng-click="tab = 'lineTiming'">Line timing</div>
+							<div class="tab" ng-class="tab === 'wordTiming' ? 'highlight': ''" ng-click="tab = 'wordTiming'">Word timing</div>
+							<div class="tab" ng-class="tab === 'export' ? 'highlight': ''" ng-click="tab = 'export'">Export</div>
+						</div>
+						<div class="tabScreen" ng-show="tab === 'metadata'">
+							<table id="metadataTable">
+								<tbody>
+									<tr>
+										<td>
+											Title:
+										</td>
+										<td>
+											<input ng-model='metadata.title'>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Artist:
+										</td>
+										<td>
+											<input ng-model='metadata.artist'>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Album:
+										</td>
+										<td>
+											<input ng-model='metadata.album'>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Released (year):
+										</td>
+										<td>
+											<input ng-model='metadata.year'>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Language:
+										</td>
+										<td>
+											<input ng-model='metadata.language'>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Album art path:
+										</td>
+										<td>
+											<input ng-model='metadata.art'>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Music file path:
+										</td>
+										<td>
+											<input ng-model='metadata.file'>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Difficulty:
+										</td>
+										<td>
+											<select ng-model="metadata.difficulty">
+												<option value="1">Very easy</option>
+												<option value="2">Easy</option>
+												<option value="3">Normal</option>
+												<option value="4">Hard</option>
+												<option value="5">Very hard</option>
+											</select>
+										</td>
+									</tr>
+								</tbody>
 							</table>
 						</div>
 
-						<div id="lineTimingInstructions">
-							<p><strong>Space</strong> to start/stop playback.</p>
-							<p><strong>N</strong> to place the next line marker, <strong>S</strong> to place <dfn title="A period during which the player cannot continue to type the previous line but may not yet start the next">space</dfn></p>
-							<p><strong>Drag</strong> markers with the mouse to reposition them. The dragged line and the one before it will have their word timings reset.</p>
-							<p><strong>Shift-click</strong> a space marker to remove it or a line marker to merge it with the previous line.</p>
-							<p><strong>Shift-click</strong> a word in the "current line" area to split the line at that word.</p>
-							<p><strong>Click</strong> the line in the "current line" area to edit the line. If you change the number of words, that line's word timing information will be reset.</p>
-							<p><strong>Page up/page down</strong> to move to the previous/next marker.</p>
-							<p><strong>Click</strong> on a marker to move the cursor to the marker.</p>
-							<p><strong>Arrow keys</strong> or <strong>click</strong> to move the cursor.</p>
-							<p><strong>Home/end</strong> to move to the beginning or end of the song.</p>
-							<p><strong><a href="mailto:wavelyric@tacosareawesome.com" target="_blank">Email</a></strong> me if you need help. I know it's a bit confusing at first!</p>
-						</div>
-					</div>
+						<div class="tabScreen" ng-show="tab === 'lineTiming'">
+							<canvas width="900" height="200" id="lineTimingCanvas"></canvas>
+							<div id="lines">
+								<table>
+									<tr>
+										<td class="lineLabel">
+											PREVIOUS LINE:
+										</td>
+										<td>
+											<div ng-model="previousLine" id="previousLine">{{showPreviousLine()}}</div>
+										</td>
+									</tr>
+									<tr>
+										<td class="lineLabel">
+											CURRENT LINE:
+										</td>
+										<td>
+											<div ng-hide="editingCurrentLine" id="currentLine" ng-click="editLineText()" ng-class="holdingShift && !markers[currentMarker].space? 'holdingShift' : ''">
+												<span ng-repeat="word in showCurrentLine() track by $index"><span id="{{'invididualLineWord-' + $index}}" class="individualLineWord" ng-click="splitAtWord($event, $index)">{{showCurrentLine()[$index]}}</span>&nbsp;</span>
+											</div>
+											<input id="currentLineInput" ng-model="currentLineInput" ng-show="editingCurrentLine" ng-blur="saveEditingText()">
+										</td>
+									</tr>
+									<tr>
+										<td class="lineLabel">
+											NEXT LINE:
+										</td>
+										<td>
+											<div ng-model="nextLine" id="nextLine">{{showNextLine()}}</div>
+										</td>
+									</tr>
+								</table>
+							</div>
 
-					<div class="tabScreen" ng-show="tab === 'wordTiming'">
-						<div id="wordTimingInstructions">
-							<strong>Click</strong> on a line to time individual words.
-						</div>
-						<div ng-repeat="wordTiming in wordTimings">
-							<div class="wordTimingLine" ng-click="clickLine($index)">{{lines[$index]}}</div>
-							<canvas class="wordTimingCanvas" ng-show="editingLine === $index" id="wordEditor-{{$index}}" width="900" height="150"></canvas>
-						</div>
-					</div>
-
-					<div class="tabScreen" ng-show="tab === 'export'">
-						<p>Export to <strong>JSON</strong> for later use with wavelyric (more precision, works with unfinished projects). Export to <strong>Steno Hero</strong> for use with Steno Arcade.</p>
-						<div id="jsonExports" class="exportSection">
-							<button ng-click="showJSON();">Show JSON</button>
-							<button ng-click="saveJSON();">Download JSON</button>
-						</div>
-						<div id="stenoHeroExports" class="exportSection">
-							<button ng-click="showStenoHero();">Show Steno Hero</button>
-							<button ng-click="saveStenoHero();">Download Steno Hero</button>
+							<div id="lineTimingInstructions">
+								<p><strong>Space</strong> to start/stop playback.</p>
+								<p><strong>N</strong> to place the next line marker, <strong>S</strong> to place <dfn title="A period during which the player cannot continue to type the previous line but may not yet start the next">space</dfn></p>
+								<p><strong>Drag</strong> markers with the mouse to reposition them. The dragged line and the one before it will have their word timings reset.</p>
+								<p><strong>Shift-click</strong> a space marker to remove it or a line marker to merge it with the previous line.</p>
+								<p><strong>Shift-click</strong> a word in the "current line" area to split the line at that word.</p>
+								<p><strong>Click</strong> the line in the "current line" area to edit the line. If you change the number of words, that line's word timing information will be reset.</p>
+								<p><strong>Page up/page down</strong> to move to the previous/next marker.</p>
+								<p><strong>Click</strong> on a marker to move the cursor to the marker.</p>
+								<p><strong>Arrow keys</strong> or <strong>click</strong> to move the cursor.</p>
+								<p><strong>Home/end</strong> to move to the beginning or end of the song.</p>
+								<p><strong><a href="mailto:wavelyric@tacosareawesome.com" target="_blank">Email</a></strong> me if you need help. I know it's a bit confusing at first!</p>
+							</div>
 						</div>
 
-						<textarea ng-model="exportArea" id="exportArea" ng-show="showExportArea"></textarea>
-						<button ng-click="showExportArea = false;" ng-show="showExportArea">Hide</button>
+						<div class="tabScreen" ng-show="tab === 'wordTiming'">
+							<div id="wordTimingInstructions">
+								<strong>Click</strong> on a line to time individual words.
+							</div>
+							<div ng-repeat="wordTiming in wordTimings">
+								<div class="wordTimingLine" ng-click="clickLine($index)">{{lines[$index]}}</div>
+								<canvas class="wordTimingCanvas" ng-show="editingLine === $index" id="wordEditor-{{$index}}" width="900" height="150"></canvas>
+							</div>
+						</div>
 
-						<p>An <strong>ogg</strong> file is an audio file that can be read by Steno Hero. You can download this song as an ogg (experimental!) by clicking "Export Ogg" and waiting a few seconds.</p>
-						<div id="oggExport" class="exportSection">
-							<label>Ogg Quality (-0.1 to 1.0): <input type="range" min="-0.1" max="1.0" step="0.1" value="0.5" ng-model="oggQuality" ng-disabled="oggExportInProgress"> <span>{{oggQuality}}</span></label>
-							<button ng-click="beginOggExport()" ng-disabled="oggExportInProgress">Export Ogg</button>
+						<div class="tabScreen" ng-show="tab === 'export'">
+							<p>Export to <strong>JSON</strong> for later use with wavelyric (more precision, works with unfinished projects). Export to <strong>Steno Hero</strong> for use with Steno Arcade.</p>
+							<div id="jsonExports" class="exportSection">
+								<button ng-click="showJSON();">Show JSON</button>
+								<button ng-click="saveJSON();">Download JSON</button>
+							</div>
+							<div id="stenoHeroExports" class="exportSection">
+								<button ng-click="showStenoHero();">Show Steno Hero</button>
+								<button ng-click="saveStenoHero();">Download Steno Hero</button>
+							</div>
+
+							<textarea ng-model="exportArea" id="exportArea" ng-show="showExportArea"></textarea>
+							<button ng-click="showExportArea = false;" ng-show="showExportArea">Hide</button>
+
+							<p>An <strong>ogg</strong> file is an audio file that can be read by Steno Hero. You can download this song as an ogg (experimental!) by clicking "Export Ogg" and waiting a few seconds.</p>
+							<div id="oggExport" class="exportSection">
+								<label>Ogg Quality (-0.1 to 1.0): <input type="range" min="-0.1" max="1.0" step="0.1" value="0.5" ng-model="oggQuality" ng-disabled="oggExportInProgress"> <span>{{oggQuality}}</span></label>
+								<button ng-click="beginOggExport()" ng-disabled="oggExportInProgress">Export Ogg</button>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<footer>
-				By <a href="http://timothyaveni.com/">Timothy Aveni</a> <a href="https://github.com/syntaxblitz/wavelyric"><img src="assets/GitHub-Mark-32px.png" class="small-mark"></a>
-			</footer>
+				<footer>
+					By <a href="http://timothyaveni.com/">Timothy Aveni</a> <a href="https://github.com/syntaxblitz/wavelyric"><img src="assets/GitHub-Mark-32px.png" class="small-mark"></a>
+				</footer>
+			</div>
 		</div>
 	</body>
 </html>

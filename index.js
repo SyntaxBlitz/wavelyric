@@ -3,6 +3,15 @@ var wavelyricApp = angular.module('wavelyricApp', []);
 
 var spaceText = '<space>';
 
+var editorColours = {
+	waveformColour: '#456',
+	cursorColour: 'rgba(0, 0, 0, 1)',
+	defaultMarkerColour: 'rgba(55, 110, 145, 1)',
+	passedMarkerColour: 'rgba(55, 110, 145, .3)',
+	hoveringMarkerColour: 'rgba(126, 164, 188, .7)',
+	lockedMarkerColour: 'rgba(128, 128, 128, .75)'
+};
+
 wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	$scope.stage = 'start';
 	$scope.dropZone = document.body;
@@ -37,6 +46,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 			$scope.lineEditor.onShiftClickMarker = $scope.onShiftClickMarker;
 			$scope.lineEditor.onMoveMarker = $scope.onMoveMarker;
 			$scope.lineEditor.markers = $scope.markers;
+			$scope.lineEditor.colours = editorColours;
 			$scope.registerLineTimingListeners();
 		} else if (oldTab === 'lineTiming') {
 			$scope.lineEditor.destroy();
@@ -454,6 +464,7 @@ wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 		$scope.registerWordTimingListeners();
 		$scope.activeWordEditor.firstMarkerLocked = true;
 		$scope.activeWordEditor.onMoveMarker = $scope.wordMove;
+		$scope.activeWordEditor.colours = editorColours;
 
 		let words = $scope.lines[$scope.editingLine].split(' ');
 		for (let i = 0; i < words.length; i++) {
@@ -797,7 +808,7 @@ var registerEventListeners = function (dropZone, $scope) {
 
 	dropZone.ondragleave = function (e) {
 		dropDepth--;
-		
+
 		if (dropDepth === 0) {
 			$scope.draggingFile = false;
 			$scope.$apply();
