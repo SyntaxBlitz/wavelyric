@@ -22,19 +22,23 @@ class Waveform {
 				var n = i * scaleFactor + j;
 				if (n < data[0].length) {
 					var sample = (data[0][n] + data[1][n]) / 2;
-					if (sample < currentMin)
+					if (sample < currentMin) {
 						currentMin = sample;
-					if (sample > currentMax)
+					}
+					if (sample > currentMax) {
 						currentMax = sample;
+					}
 				} else {
 					break;
 				}
 			}
 
-			if (currentMin < -1)	// this happens!
+			if (currentMin < -1) {	// this happens!
 				currentMin = -1;
-			if (currentMax > 1)
+			}
+			if (currentMax > 1) {
 				currentMax = 1;
+			}
 
 			this.summaryMins[i] = currentMin;
 			this.summaryMaxes[i] = currentMax;
@@ -42,8 +46,9 @@ class Waveform {
 	}
 
 	summarizeFurther (pixels, startTime, length) {
-		if (!this.summaryMins || !this.summaryMaxes)
+		if (!this.summaryMins || !this.summaryMaxes) {
 			return;
+		}
 
 		var newMins = new Float32Array(pixels);
 		var newMaxes = new Float32Array(pixels);
@@ -99,18 +104,22 @@ class Waveform {
 
 				if (useSummaryFrames) {
 					for (var frame = Math.floor(virtualPixel / totalVirtualPixels * totalFrames); frame < Math.floor((virtualPixel + 1) / totalVirtualPixels * totalFrames); frame++) {
-						if (this.summaryMins[frame] < currentMin)
+						if (this.summaryMins[frame] < currentMin) {
 							currentMin = this.summaryMins[frame];
-						if (this.summaryMaxes[frame] > currentMax)
+						}
+						if (this.summaryMaxes[frame] > currentMax) {
 							currentMax = this.summaryMaxes[frame];
+						}
 					}
 				} else {
 					for (var frame = Math.floor(virtualPixel / totalVirtualPixels * totalFrames); frame < Math.floor((virtualPixel + 1) / totalVirtualPixels * totalFrames); frame++) {
 						let sample = (this.data[0][frame] + this.data[1][frame]) / 2;
-						if (sample < currentMin)
+						if (sample < currentMin) {
 							currentMin = sample;
-						if (sample > currentMax)
+						}
+						if (sample > currentMax) {
 							currentMax = sample;
+						}
 					}
 				}
 
@@ -152,14 +161,18 @@ class Waveform {
 	}
 
 	drawWaveform(canvas, startTime, length, x, y, width, height) {
-		if (x === undefined)
+		if (x === undefined) {
 			x = 0;
-		if (y === undefined)
+		}
+		if (y === undefined) {
 			y = 0;
-		if (width === undefined)
+		}
+		if (width === undefined) {
 			width = canvas.width;
-		if (height === undefined)
+		}
+		if (height === undefined) {
 			height = canvas.height;
+		}
 
 		var context = canvas.getContext('2d');
 

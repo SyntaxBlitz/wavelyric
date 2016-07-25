@@ -208,12 +208,14 @@ class MarkerEditor {
 		this.drawCursor();
 
 		var markerNow = this.currentMarker();
-		if (markerNow !== this.lastCurrentMarker && this.onChangeCurrentMarker)
+		if (markerNow !== this.lastCurrentMarker && this.onChangeCurrentMarker) {
 			this.onChangeCurrentMarker(markerNow, this.lastCurrentMarker)
+		}
 		this.lastCurrentMarker = markerNow;
 
-		if (!this.destroyed)
+		if (!this.destroyed) {
 			window.requestAnimationFrame(this.canvasRender.bind(this));
+		}
 	}
 
 	moveDraggable() {
@@ -225,10 +227,12 @@ class MarkerEditor {
 
 			let oldPosition = currentDrag.position;
 			currentDrag.position = this.mouseXFromCanvas / this.zoomLevel + this.totalOffset - this.dragDeltaSeconds;
-			if (currentDrag.position < lowestAllowed)
+			if (currentDrag.position < lowestAllowed) {
 				currentDrag.position = lowestAllowed;
-			if (currentDrag.position > highestAllowed)
+			}
+			if (currentDrag.position > highestAllowed) {
 				currentDrag.position = highestAllowed;
+			}
 
 			if (this.onMoveMarker && oldPosition !== currentDrag.position) {
 				this.onMoveMarker(this.currentlyDraggingIndex);
@@ -316,14 +320,15 @@ class MarkerEditor {
 		for (var i = 0; i < this.markers.length; i++) {
 			let marker = this.markers[i];
 
-			if (i === 0 && this.firstMarkerLocked)
+			if (i === 0 && this.firstMarkerLocked) {
 				context.fillStyle = this.colours.lockedMarkerColour;
-			else if (marker.hovering)
+			} else if (marker.hovering) {
 				context.fillStyle = this.colours.hoveringMarkerColour;
-			else if (marker.position > this.cursor)
+			} else if (marker.position > this.cursor) {
 				context.fillStyle = this.colours.defaultMarkerColour;
-			else
+			} else {
 				context.fillStyle = this.colours.passedMarkerColour;
+			}
 
 			var markerX = (marker.position - this.totalOffset) * this.zoomLevel;
 			if (Math.abs(marker.position - this.length - this.startTime) < 1e-6) {	// if they're equal (floats)
@@ -407,12 +412,15 @@ class MarkerEditor {
 			return null;
 
 		var i = 0;
-		while (i < this.markers.length && this.markers[i].position <= this.cursor + 1e-6)
+		while (i < this.markers.length && this.markers[i].position <= this.cursor + 1e-6) {
 			i++;
-		if (i === 0)
+		}
+
+		if (i === 0) {
 			return null;
-		else
+		} else {
 			return i - 1;
+		}
 	}
 
 	drawCursor () {
@@ -424,10 +432,12 @@ class MarkerEditor {
 	}
 
 	clipOffset () {
-		if (this.totalOffset > this.length - this.drawingBounds.width / this.zoomLevel + this.startTime)
+		if (this.totalOffset > this.length - this.drawingBounds.width / this.zoomLevel + this.startTime) {
 			this.totalOffset = this.length - this.drawingBounds.width / this.zoomLevel + this.startTime;
-		if (this.totalOffset < this.startTime)
+		}
+		if (this.totalOffset < this.startTime) {
 			this.totalOffset = this.startTime;
+		}
 	};
 
 	centreCursor () {
@@ -446,8 +456,9 @@ class MarkerEditor {
 	}
 
 	play () {
-		if (this.playing)
+		if (this.playing) {
 			return;
+		}
 
 		this.playing = true;
 
@@ -461,8 +472,9 @@ class MarkerEditor {
 	}
 
 	stop () {
-		if (!this.playing)
+		if (!this.playing) {
 			return;
+		}
 
 		this.playing = false;
 		this.source.stop();
