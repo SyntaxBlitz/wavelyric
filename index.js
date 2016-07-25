@@ -4,7 +4,6 @@ var wavelyricApp = angular.module('wavelyricApp', []);
 var spaceText = '<space>';
 
 wavelyricApp.controller('WavelyricCtrl', function ($scope) {
-	window.$scope = $scope;
 	$scope.stage = 'start';
 	$scope.dropZone = document.getElementById('dropZone');
 	$scope.tab = 'metadata';

@@ -3,8 +3,6 @@ class Waveform {
 		this.buffer = arrayBuffer;
 		this.maxResolution = maxResolution;
 		this.summarize(maxResolution);
-		
-		console.log('waveform constructed');
 	}
 
 	summarize (pixelsPerSecond) {
