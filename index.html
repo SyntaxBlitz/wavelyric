@@ -20,6 +20,13 @@
 	</head>
 
 	<body ng-controller="WavelyricCtrl">
+		<div id="dropOverlay" ng-show="draggingFile">
+			<div id="dropOverlayInner">
+				<div id="dropOverlayText">
+					Drop file
+				</div>
+			</div>
+		</div>
 		<div id="container">
 			<header>
 				<img src="assets/logo.png">
@@ -31,10 +38,7 @@
 
 					<p>Here, you can set up precise lyric timings for songs. Then, you can export the data into a format appropriate for <a href="http://store.steampowered.com/app/449000/">Steno Hero</a>.</p>
 
-					<p>Drag and drop a music file from your computer into the box below to get started. Make sure your browser is up-to-date!</p>
-
-					<div id="dropZone" ng-class="draggingFile ? 'draggingFile' : ''">
-					</div>
+					<p>Drag and drop a music file from your computer anywhere on the page to get started. Make sure your browser is up-to-date!</p>
 				</div>
 
 				<div id="loading" ng-show="stage === 'loading'">

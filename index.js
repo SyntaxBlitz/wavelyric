@@ -5,7 +5,7 @@ var spaceText = '<space>';
 
 wavelyricApp.controller('WavelyricCtrl', function ($scope) {
 	$scope.stage = 'start';
-	$scope.dropZone = document.getElementById('dropZone');
+	$scope.dropZone = document.body;
 	$scope.tab = 'metadata';
 
 	$scope.waveform = null;
@@ -784,15 +784,21 @@ var registerEventListeners = function (dropZone, $scope) {
 		e.dataTransfer.dropEffect = 'copy';	
 	};
 
+	var dropDepth = 0;
+
 	dropZone.ondragenter = function (e) {
-		if (e.target === $scope.dropZone) {
+		if (dropDepth === 0) {
 			$scope.draggingFile = true;
 			$scope.$apply();
 		}
+
+		dropDepth++;
 	};
 
 	dropZone.ondragleave = function (e) {
-		if (e.target === $scope.dropZone) {
+		dropDepth--;
+		
+		if (dropDepth === 0) {
 			$scope.draggingFile = false;
 			$scope.$apply();
 		}
