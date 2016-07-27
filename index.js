@@ -819,6 +819,8 @@ var registerEventListeners = function (dropZone, $scope) {
 		e.stopPropagation();
 		e.preventDefault();
 
+		dropDepth = 0;
+
 		$scope.draggingFile = false;
 
 		var files = e.dataTransfer.files;
@@ -826,28 +828,27 @@ var registerEventListeners = function (dropZone, $scope) {
 			let file = files[0];
 
 			// die if it's not an audio file
-			if (!(file.type.length > 6 && file.type.substring(0, 6) === 'audio/')) {
-				return;
+			if (file.type.length > 6 && file.type.substring(0, 6) === 'audio/') {
+				let reader = new FileReader();
+
+				reader.onload = function (readerEvent) {
+					audioCtx.decodeAudioData(readerEvent.target.result).then(function (audioBuffer) {
+						$scope.waveform = new Waveform(audioBuffer, 1000);
+
+						// we have to construct the ogg encoder in advance so the script has time to pre-initialise.
+						// this doesn't create an actual encoder object, but does set up the web worker.
+						$scope.oggEncoder = new OggEncoder(audioBuffer);
+
+						$scope.stage = 'newOrImport';
+						$scope.$apply();
+					});
+				};
+
+				reader.readAsArrayBuffer(file);
+				$scope.stage = 'loading';
 			}
-
-			let reader = new FileReader();
-
-			reader.onload = function (readerEvent) {
-				audioCtx.decodeAudioData(readerEvent.target.result).then(function (audioBuffer) {
-					$scope.waveform = new Waveform(audioBuffer, 1000);
-
-					// we have to construct the ogg encoder in advance so the script has time to pre-initialise.
-					// this doesn't create an actual encoder object, but does set up the web worker.
-					$scope.oggEncoder = new OggEncoder(audioBuffer);
-
-					$scope.stage = 'newOrImport';
-					$scope.$apply();
-				});
-			};
-
-			reader.readAsArrayBuffer(file);
-			$scope.stage = 'loading';
-			$scope.$apply();
 		}
+
+		$scope.$apply();
 	};
 };
