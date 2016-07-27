@@ -35,19 +35,29 @@
 		<div id="container">
 			<div class="narrow">
 				<div id="mainPanel">
-					<div id="welcome" ng-show="stage === 'start'">
-						<p>Hey there! This is wavelyric.</p>
+					<div id="welcome" ng-show="stage === 'start'" class="stageContainer">
+						<p class="intro">Hey there! This is wavelyric. <strong>Drag a music file</strong> into the page to get started.</p>
 
-						<p>Here, you can set up precise lyric timings for songs. Then, you can export the data into a format appropriate for <a href="http://store.steampowered.com/app/449000/">Steno Hero</a>.</p>
+						<div id="landingBackground">
+							<div class="firstText">
+								<p>
+									With wavelyric, you can create Karaoke-style timing data for every word in any song. You'll have a waveform representation of the song and a bunch of keyboard shortcuts at your fingertips to help you get going.
+								</p>
+							</div>
 
-						<p>Drag and drop a music file from your computer anywhere on the page to get started. Make sure your browser is up-to-date!</p>
+							<div class="secondText">
+								<p>
+									When you're finished, you can export to a .lrc file, formatted perfectly for use with <a href="http://store.steampowered.com/app/449000/">Steno Hero</a>, a free typing game aimed at stenographers.
+								</p>
+							</div>
+						</div>
 					</div>
 
-					<div id="loading" ng-show="stage === 'loading'">
+					<div id="loading" ng-show="stage === 'loading'" class="stageContainer">
 						Loading audio file...
 					</div>
 					
-					<div id="newOrImport" ng-show="stage === 'newOrImport'">
+					<div id="newOrImport" ng-show="stage === 'newOrImport'" class="stageContainer">
 						<div id="newSong" ng-click="stage = 'lyrics'">
 							<div class="bigWords">New song</div>
 							Start from scratch using the audio file you chose.
@@ -59,19 +69,19 @@
 						</div>
 					</div>
 
-					<div id="lyrics" ng-show="stage === 'lyrics'">
+					<div id="lyrics" ng-show="stage === 'lyrics'" class="stageContainer">
 						Enter the song's lyrics:<br>
 						<textarea ng-model="lyricsField"></textarea><br>
 						<button ng-click="loadLyrics()" ng-disabled="lyricsField === ''">Finished</button>
 					</div>
 
-					<div id="import" ng-show="stage === 'import'">
+					<div id="import" ng-show="stage === 'import'" class="stageContainer">
 						Enter JSON or a .lrc file:<br>
 						<textarea ng-model="importField"></textarea><br>
 						<button ng-click="import()" ng-disabled="importField === ''">Finished</button>
 					</div>
 
-					<div id="main" ng-show="stage === 'main'">
+					<div id="main" ng-show="stage === 'main'" class="stageContainer">
 						<div id="tabs">
 							<div class="tab" ng-class="tab === 'metadata' ? 'highlight': ''" ng-click="tab = 'metadata'">Metadata</div>
 							<div class="tab" ng-class="tab === 'lineTiming' ? 'highlight': ''" ng-click="tab = 'lineTiming'">Line timing</div>

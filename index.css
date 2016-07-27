@@ -3,6 +3,15 @@ body {
 	font-family: sans-serif;
 }
 
+a, a:link, a:visited, a:active {
+	color: #456;
+	text-decoration: underline;
+}
+
+a:hover {
+	text-decoration: none;
+}
+
 #container {
 	position: absolute;
 	width: 100%;
@@ -40,8 +49,54 @@ header img {
 	margin: 20px;
 }
 
-#mainPanel, footer {
+#mainPanel .stageContainer, footer {
 	padding: 30px;
+}
+
+#mainPanel .stageContainer#welcome {
+	padding: 0;
+}
+
+#welcome .intro {
+	margin: 0;
+	padding: 30px;
+	font-size: 18pt;
+	text-align: center;
+}
+
+#landingBackground {
+	background-image: url(assets/landing-page.png);
+	width: 960px;
+	height: 500px;
+	position: relative;
+}
+
+#landingBackground div {
+	width: 360px;
+	height: 250px;
+
+	position: absolute;
+
+	font-size: 16pt;
+	padding-left: 30px;
+	padding-right: 30px;
+
+	margin: 0;
+	line-height: 1.5em;
+}
+
+#landingBackground .firstText {
+	text-align: right;
+
+	top: 0;
+	right: 0;
+}
+
+#landingBackground .secondText {
+	text-align: left;
+
+	bottom: 0;
+	left: 0;
 }
 
 #dropOverlay {
@@ -217,10 +272,13 @@ header img {
 }
 
 footer {
-	font-size: 10pt;
+	font-size: 16px;
 }
 
 footer .small-mark {
 	width: 16px;
 	height: 16px;
+	margin-left: 16px;
+	position: relative;
+	top: 2px;
 }
