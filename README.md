@@ -7,4 +7,4 @@ When you're finished, you can export to a .lrc file, formatted perfectly for use
 
 You can also export .ogg files with [ogg-vorbis-encoder-js](https://github.com/higuma/ogg-vorbis-encoder-js).
 
-[Try the demo!](timothyaveni.com/wavelyric)
+[Try the demo!](http://timothyaveni.com/wavelyric)
