@@ -206,11 +206,16 @@ header img {
 }
 
 .tab.highlight {
-	background-color: #ff9;
+	background-color: #456;
+	color: #eee;
 }
 
-.tab:hover, .tab.highlight:hover {
+.tab:hover {
 	background-color: #ddd;
+}
+
+.tab.highlight:hover {
+	background-color: rgba(55, 110, 145, 1);
 }
 
 .tabScreen {
