@@ -8,3 +8,7 @@ When you're finished, you can export to a .lrc file, formatted perfectly for use
 You can also export .ogg files with [ogg-vorbis-encoder-js](https://github.com/higuma/ogg-vorbis-encoder-js).
 
 [Try the demo!](http://timothyaveni.com/wavelyric)
+
+![demo image showing main interface](https://raw.githubusercontent.com/syntaxblitz/wavelyric/master/main.png)
+
+![demo image showing line-editor interface](https://raw.githubusercontent.com/syntaxblitz/wavelyric/master/lines.png)
